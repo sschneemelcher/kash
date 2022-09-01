@@ -9,11 +9,12 @@ enum {
 struct command {
   int argc;
   char argv[MAX_ARGS][MAX_CMD];
-  char** arg_ptrs;
+  char **arg_ptrs;
   int bg;
   int builtin;
 };
 
-int shell_loop();
-void print_prompt(char* cwd, char* prompt);
+int shell_loop(char **env);
+void print_prompt(char *cwd, char *prompt);
 int parse_input(char *input, struct command *cmd);
+void run(struct command cmd, char **env);

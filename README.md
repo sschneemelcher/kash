@@ -1,2 +1,2 @@
-# msh
+# kash
 minimal shell

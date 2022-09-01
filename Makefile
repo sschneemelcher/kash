@@ -1,12 +1,12 @@
 CC = clang
 CFLAGS  = -Wall -g -Ofast
-OBJ = msh.o
+OBJ = shell.o
 
 all: $(OBJ)
 	test -e ./bin || mkdir ./bin
-	$(CC) $(CFLAGS) -o bin/msh  $(OBJ) 
+	$(CC) $(CFLAGS) -o bin/kash  $(OBJ) 
 	rm $(OBJ)
 
-msh.o: src/msh.c
+shell.o: src/shell.c
 	$(CC) $(CFLAGS) -c $<
 

@@ -1,15 +1,17 @@
-#include "msh.h"
+#include "shell.h"
+#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-int main(int argc, char **argv) {
-  shell_loop();
+int main(int argc, char **argv, char **envp) {
+  //char *env[2] = {getenv("TERM"), NULL};
+  shell_loop(envp);
   return 0;
 }
 
-int shell_loop() {
+int shell_loop(char** env) {
   char prompt[MAX_PROMPT] = "> ";
   char input[MAX_INPUT] = {0};
   char cwd[MAX_PATH] = {0};
@@ -19,20 +21,21 @@ int shell_loop() {
     fgets(input, MAX_INPUT, stdin);
     struct command cmd;
     if (parse_input(input, &cmd) > 0) {
-      // fork and exec
-      const int pid = fork();
-      if (pid != 0) {
-        int result = 0;
-        waitpid(pid, &result, 0);
-      } else {
-        execvp(cmd.argv[0], cmd.arg_ptrs);
-        return 0;
-      }
+      run(cmd, env);
     }
   } while (!(input[0] == 'e' && input[1] == 'x' && input[2] == 'i' &&
              input[3] == 't'));
 
   return 0;
+}
+
+void run(struct command cmd, char** env) {
+  pid_t pid;
+  int result =
+      posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
+  if (result == 0) {
+   waitpid(pid, &result, 0);
+  }
 }
 
 void print_prompt(char *cwd, char *prompt) {
