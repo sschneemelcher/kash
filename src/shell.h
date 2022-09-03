@@ -11,10 +11,12 @@ struct command {
   char argv[MAX_ARGS][MAX_CMD];
   char **arg_ptrs;
   int bg;
-  int builtin;
+  enum builtin_t { NONE, EXIT, CD, EMPTY } builtin;
 };
 
 int shell_loop(char **env);
 void print_prompt(char *cwd, char *prompt);
-int parse_input(char *input, struct command *cmd);
+void parse_input(char *input, struct command *cmd);
+void parse_from_index(char *input, int index, struct command *cmd);
 void run(struct command cmd, char **env);
+void run_builtin(struct command cmd, char **env);
