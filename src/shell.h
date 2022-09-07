@@ -20,3 +20,4 @@ void parse_input(char *input, struct command *cmd);
 void parse_from_index(char *input, int index, struct command *cmd);
 void run(struct command cmd, char **env);
 void run_builtin(struct command cmd, char **env);
+void handle_keys(char *input);

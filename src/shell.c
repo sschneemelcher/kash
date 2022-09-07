@@ -3,12 +3,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 int main(int argc, char **argv, char **envp) {
   // char *env[2] = {getenv("TERM"), NULL};
   shell_loop(envp);
   return 0;
+}
+
+int getch() {
+  struct termios raw_mode, buffered_mode;
+  int ch;
+  tcgetattr(STDIN_FILENO, &buffered_mode);
+  memcpy(&raw_mode, &buffered_mode, sizeof(struct termios));
+  raw_mode.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &raw_mode);
+  ch = getchar();
+  tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
+  return ch;
 }
 
 int shell_loop(char **env) {
@@ -18,7 +31,8 @@ int shell_loop(char **env) {
   while (1) {
     getcwd(cwd, MAX_PATH);
     print_prompt(cwd, prompt);
-    fgets(input, MAX_INPUT, stdin);
+    // fgets(input, MAX_INPUT, stdin);
+    handle_keys(input);
     struct command cmd;
     parse_input(input, &cmd);
     if (cmd.builtin == NONE) {
@@ -28,6 +42,23 @@ int shell_loop(char **env) {
     }
   }
   return 0;
+}
+
+void handle_keys(char *input) {
+  char key = '\0';
+  int i = 0;
+  while (i < MAX_INPUT - 1) {
+    key = getch();
+    printf("%c", key);
+    if (key == 10) {
+      input[i] = '\n';
+      input[i + 1] = '\0';
+      break;
+    } else if (key >= 32 && key <= 126) {
+      input[i] = key;
+      i += 1;
+    }
+  }
 }
 
 void run(struct command cmd, char **env) {
@@ -79,8 +110,8 @@ void parse_input(char *input, struct command *cmd) {
   } else if (input[0] == 'c' && input[1] == 'd') {
     cmd->builtin = CD;
     if (input[2] == '\n' || (input[2] == ' ' && input[3] == '\n')) {
-        memcpy(cmd->argv[0], getenv("HOME"), MAX_CMD);
-        cmd->arg_ptrs[0] = cmd->argv[0];
+      memcpy(cmd->argv[0], getenv("HOME"), MAX_CMD);
+      cmd->arg_ptrs[0] = cmd->argv[0];
     } else if (input[2] == ' ') {
       if (input[3] == '\n') {
         memcpy(cmd->argv[0], getenv("HOME"), MAX_CMD);
