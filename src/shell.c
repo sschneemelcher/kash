@@ -1,7 +1,11 @@
 #include "shell.h"
+#include <signal.h>
 
+void intHandler(int dummy) {
+}
 
 int main(int argc, char **argv, char **envp) {
+  signal(SIGINT, intHandler);
   shell_loop(envp);
   return 0;
 }
@@ -31,37 +35,50 @@ void handle_keys(char *input) {
   int index = 0;
   while (end < MAX_INPUT - 1) {
     key = getch();
+    // printf(" %d ", key);
     switch (key) {
-    case 27:
-      getch();
+    case 27:   // Arrow Keys emit 27 and
+      getch(); // 91 but we dont need the 91
       switch (getch()) {
-      case 'A':
-        // printf("\033[A"); // Up
+      case 'A': // Up
         break;
-      case 'B':
-        // printf("\033[B"); // Down
+      case 'B': // Down
         break;
-      case 'C':
+      case 'C': // Right
         if (index < end) {
-            index += 1;
-          printf("\033[C"); // Right
+          index += 1;
+          printf("\033[C");
         }
         break;
-      case 'D':
+      case 'D': // Left
         if (index > 0) {
-            index -= 1;
-          printf("\033[D"); // Left
+          index -= 1;
+          printf("\033[D");
         }
         break;
       }
       break;
-    case 8:
-    case 127:
-          index -= 1;
-          end = index;
-          input[index] = '\0';
-          printf("\033[D \033[D");
+    case 8:   // backspace
+    case 127: // delete
+      index -= 1;
+      while (end > index) {
+          input[end] = '\0';
+          end -= 1;
+      }
+      input[index] = '\0';
+      printf("\033[D\033[J");
       break;
+    case '\t': {
+      char comp[MAX_CMD];
+      get_completion(input, comp);
+      int i = 0;
+      while (comp[i] != 0) { // append completion and print it
+        input[index] = comp[i];
+        index += 1;
+        i += 1;
+      }
+      printf("%s", comp);
+    } break;
     case '\n':
       input[index] = '\n';
       input[index + 1] = '\0';
@@ -79,24 +96,13 @@ void handle_keys(char *input) {
   }
 }
 
-void run(struct command cmd, char **env) {
-  pid_t pid;
-  int result =
-      posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
-  if (result == 0) {
-    waitpid(pid, &result, 0);
-  }
-}
-
 void run_builtin(struct command cmd, char **env) {
   switch (cmd.builtin) {
   case NONE:
-    break;
   case EMPTY:
     break;
   case CD: {
-    int err = chdir(cmd.arg_ptrs[0]);
-    if (err) {
+    if (chdir(cmd.arg_ptrs[0])) { // this is true if cd returns an error
       printf("-kash: cd: %s: No such file or directory\n", cmd.arg_ptrs[0]);
     }
     break;
@@ -104,13 +110,6 @@ void run_builtin(struct command cmd, char **env) {
   case EXIT:
     exit(0);
   }
-}
-
-void print_prompt(char *cwd, char *prompt) {
-  /* TODO do something more interesting with the prompt */
-  // sprintf(prompt, "%s $ ", cwd);
-  // printf("%s", prompt);
-  printf("%s $ ", cwd);
 }
 
 void parse_input(char *input, struct command *cmd) {

@@ -28,7 +28,7 @@ void parse_from_index(char *input, int index, struct command *cmd);
 void run(struct command cmd, char **env);
 void run_builtin(struct command cmd, char **env);
 void handle_keys(char *input);
-
+char *get_completion(char *line, char *comp);
 
 int getch() {
   struct termios raw_mode, buffered_mode;
@@ -40,4 +40,26 @@ int getch() {
   ch = getchar();
   tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
   return ch;
+}
+
+void print_prompt(char *cwd, char *prompt) {
+  /* TODO do something more interesting with the prompt */
+  // sprintf(prompt, "%s $ ", cwd);
+  // printf("%s", prompt);
+  printf("%s $ ", cwd);
+}
+
+/* TODO should return a completion based on input */
+char* get_completion(char *line, char *comp) {
+    comp[0] = '\0';
+    return comp;
+}
+
+void run(struct command cmd, char **env) {
+  pid_t pid;
+  int result =
+      posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
+  if (result == 0) {
+    waitpid(pid, &result, 0);
+  }
 }
