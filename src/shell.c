@@ -1,5 +1,6 @@
 #include "shell.h"
 
+
 int main(int argc, char **argv, char **envp) {
   shell_loop(envp);
   return 0;
@@ -7,12 +8,11 @@ int main(int argc, char **argv, char **envp) {
 
 int shell_loop(char **env) {
   char prompt[MAX_PROMPT] = "$ ";
-  char input[MAX_INPUT] = {0};
-  char cwd[MAX_PATH] = {0};
+  char input[MAX_INPUT] = "";
+  char cwd[MAX_PATH] = "";
   while (1) {
     getcwd(cwd, MAX_PATH);
     print_prompt(cwd, prompt);
-    // fgets(input, MAX_INPUT, stdin);
     handle_keys(input);
     struct command cmd;
     parse_input(input, &cmd);
@@ -27,32 +27,52 @@ int shell_loop(char **env) {
 
 void handle_keys(char *input) {
   int key = 0;
-  int i = 0;
-  while (i < MAX_INPUT - 1) {
+  int end = 0;
+  int index = 0;
+  while (end < MAX_INPUT - 1) {
     key = getch();
     switch (key) {
     case 27:
       getch();
       switch (getch()) {
-
       case 'A':
+        // printf("\033[A"); // Up
         break;
       case 'B':
+        // printf("\033[B"); // Down
         break;
       case 'C':
+        if (index < end) {
+            index += 1;
+          printf("\033[C"); // Right
+        }
         break;
       case 'D':
+        if (index > 0) {
+            index -= 1;
+          printf("\033[D"); // Left
+        }
         break;
       }
       break;
+    case 8:
+    case 127:
+          index -= 1;
+          end = index;
+          input[index] = '\0';
+          printf("\033[D \033[D");
+      break;
     case '\n':
-      input[i] = '\n';
-      input[i + 1] = '\0';
+      input[index] = '\n';
+      input[index + 1] = '\0';
       printf("\n");
       return;
     default:
-      input[i] = key;
-      i += 1;
+      input[index] = key;
+      index += 1;
+      if (index > end) {
+        end += 1;
+      }
       printf("%c", key);
       break;
     }
