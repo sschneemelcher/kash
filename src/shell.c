@@ -1,27 +1,8 @@
 #include "shell.h"
-#include <spawn.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-#include <unistd.h>
 
 int main(int argc, char **argv, char **envp) {
-  // char *env[2] = {getenv("TERM"), NULL};
   shell_loop(envp);
   return 0;
-}
-
-int getch() {
-  struct termios raw_mode, buffered_mode;
-  int ch;
-  tcgetattr(STDIN_FILENO, &buffered_mode);
-  memcpy(&raw_mode, &buffered_mode, sizeof(struct termios));
-  raw_mode.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &raw_mode);
-  ch = getchar();
-  tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
-  return ch;
 }
 
 int shell_loop(char **env) {
@@ -45,18 +26,35 @@ int shell_loop(char **env) {
 }
 
 void handle_keys(char *input) {
-  char key = '\0';
+  int key = 0;
   int i = 0;
   while (i < MAX_INPUT - 1) {
     key = getch();
-    printf("%c", key);
-    if (key == 10) {
+    switch (key) {
+    case 27:
+      getch();
+      switch (getch()) {
+
+      case 'A':
+        break;
+      case 'B':
+        break;
+      case 'C':
+        break;
+      case 'D':
+        break;
+      }
+      break;
+    case '\n':
       input[i] = '\n';
       input[i + 1] = '\0';
-      break;
-    } else if (key >= 32 && key <= 126) {
+      printf("\n");
+      return;
+    default:
       input[i] = key;
       i += 1;
+      printf("%c", key);
+      break;
     }
   }
 }
