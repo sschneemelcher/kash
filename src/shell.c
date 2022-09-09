@@ -1,8 +1,7 @@
 #include "shell.h"
 #include <signal.h>
 
-void intHandler(int dummy) {
-}
+void intHandler(int dummy) {}
 
 int main(int argc, char **argv, char **envp) {
   signal(SIGINT, intHandler);
@@ -60,13 +59,22 @@ void handle_keys(char *input) {
       break;
     case 8:   // backspace
     case 127: // delete
-      index -= 1;
-      while (end > index) {
-          input[end] = '\0';
-          end -= 1;
+      if (index > 0) {
+        printf("\033[s");
+        printf("\033[D");
+        index -= 1;
+        end -= 1;
+        if (index < end) {
+          int i = index;
+          // printf("\033[%uC ", end - index - 1); // got to end of input
+          while (i < end) {
+            input[i] = input[i + 1];
+            printf("%c", input[i]);
+            i += 1;
+          }
+        } 
+        printf(" \033[u\033[D");
       }
-      input[index] = '\0';
-      printf("\033[D\033[J");
       break;
     case '\t': {
       char comp[MAX_CMD];
@@ -85,6 +93,16 @@ void handle_keys(char *input) {
       printf("\n");
       return;
     default:
+      if (index < end) {
+        int i = end;
+        printf("\033[%uC", end - index); // got to end of input
+        end += 1;
+        while (i > index) {
+          input[i] = input[i - 1];
+          printf("%c\033[2D", input[i]);
+          i -= 1;
+        }
+      }
       input[index] = key;
       index += 1;
       if (index > end) {
