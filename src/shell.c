@@ -3,7 +3,10 @@
 
 void intHandler(int dummy) {}
 
+char *HOME;
+
 int main(int argc, char **argv, char **envp) {
+  HOME = getenv("HOME");
   signal(SIGINT, intHandler);
   shell_loop(envp);
   return 0;
@@ -26,92 +29,6 @@ int shell_loop(char **env) {
     }
   }
   return 0;
-}
-
-void handle_keys(char *input) {
-  int key = 0;
-  int end = 0;
-  int index = 0;
-  while (end < MAX_INPUT - 1) {
-    key = getch();
-    // printf(" %d ", key);
-    switch (key) {
-    case 27:   // Arrow Keys emit 27 and
-      getch(); // 91 but we dont need the 91
-      switch (getch()) {
-      case 'A': // Up
-        break;
-      case 'B': // Down
-        break;
-      case 'C': // Right
-        if (index < end) {
-          index += 1;
-          printf("\033[C");
-        }
-        break;
-      case 'D': // Left
-        if (index > 0) {
-          index -= 1;
-          printf("\033[D");
-        }
-        break;
-      }
-      break;
-    case 8:   // backspace
-    case 127: // delete
-      if (index > 0) {
-        printf("\033[s");
-        printf("\033[D");
-        index -= 1;
-        end -= 1;
-        if (index < end) {
-          int i = index;
-          // printf("\033[%uC ", end - index - 1); // got to end of input
-          while (i < end) {
-            input[i] = input[i + 1];
-            printf("%c", input[i]);
-            i += 1;
-          }
-        } 
-        printf(" \033[u\033[D");
-      }
-      break;
-    case '\t': {
-      char comp[MAX_CMD];
-      get_completion(input, comp);
-      int i = 0;
-      while (comp[i] != 0) { // append completion and print it
-        input[index] = comp[i];
-        index += 1;
-        i += 1;
-      }
-      printf("%s", comp);
-    } break;
-    case '\n':
-      input[index] = '\n';
-      input[index + 1] = '\0';
-      printf("\n");
-      return;
-    default:
-      if (index < end) {
-        int i = end;
-        printf("\033[%uC", end - index); // got to end of input
-        end += 1;
-        while (i > index) {
-          input[i] = input[i - 1];
-          printf("%c\033[2D", input[i]);
-          i -= 1;
-        }
-      }
-      input[index] = key;
-      index += 1;
-      if (index > end) {
-        end += 1;
-      }
-      printf("%c", key);
-      break;
-    }
-  }
 }
 
 void run_builtin(struct command cmd, char **env) {
@@ -137,28 +54,37 @@ void parse_input(char *input, struct command *cmd) {
    * and a char** for the arguments (including)
    * the command itself
    */
+
   if (input[0] == '\n') {
     cmd->builtin = EMPTY;
-  } else if (input[0] == 'e' && input[1] == 'x' && input[2] == 'i' &&
-             input[3] == 't' && input[4] == '\n') {
-    cmd->builtin = EXIT;
-  } else if (input[0] == 'c' && input[1] == 'd') {
-    cmd->builtin = CD;
-    if (input[2] == '\n' || (input[2] == ' ' && input[3] == '\n')) {
-      memcpy(cmd->argv[0], getenv("HOME"), MAX_CMD);
-      cmd->arg_ptrs[0] = cmd->argv[0];
-    } else if (input[2] == ' ') {
-      if (input[3] == '\n') {
-        memcpy(cmd->argv[0], getenv("HOME"), MAX_CMD);
-        cmd->arg_ptrs[0] = cmd->argv[0];
-      } else {
-        parse_from_index(input, 3, cmd);
-      }
-    }
-  } else {
-    cmd->builtin = NONE;
-    parse_from_index(input, 0, cmd);
   }
+
+  char *word = strtok(input, " ");
+
+  if (word[0] == 'e' && word[1] == 'x' && word[2] == 'i' && word[3] == 't' &&
+      (word[4] == '\n' || word[4] == '\0')) {
+    cmd->builtin = EXIT;
+    return;
+  } else if (word[0] == 'c' && word[1] == 'd') {
+    cmd->builtin = CD;
+    if (word[2] == '\n') {
+      cmd->arg_ptrs[0] = HOME;
+      return;
+    } else if (word[2] == '\0') {
+      char *path = strtok(NULL, " ");
+      int i = 0;
+      while (*path != '\n' && *path != '\n' && i < MAX_CMD) {
+        cmd->argv[0][i] = *path;
+        path += 1;
+        i += 1;
+      }
+      cmd->argv[0][i] = '\0';
+      cmd->arg_ptrs[0] = cmd->argv[0];
+      return;
+    }
+  }
+  cmd->builtin = NONE;
+  // parse_cmd(char* cmd, struct command *cmd);
 }
 
 void parse_from_index(char *input, int index, struct command *cmd) {
