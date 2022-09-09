@@ -82,15 +82,17 @@ void parse_input(char *input, struct command *cmd) {
 }
 
 void parse_cmd(char *word_ret, struct command *cmd) {
+    int i = 1;
+    cmd->bg = 0;
   for (char *word = strtok_r(NULL, " ", &word_ret); word;
        word = strtok_r(NULL, " ", &word_ret)) {
     if (*word == '&' && !strtok_r(NULL, " ", &word_ret)) {
       cmd->bg = 1;
-      return;
+      break;
     } else {
-      strcpy(cmd->argv[0], word);
-      cmd->arg_ptrs[0] = cmd->argv[0];
+      strcpy(cmd->argv[i], word);
+      cmd->arg_ptrs[i] = cmd->argv[i];
     }
-    cmd->bg = 0;
+    i+=1;
   }
 }
