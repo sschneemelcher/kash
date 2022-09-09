@@ -89,6 +89,7 @@ void parse_cmd(char *word_ret, struct command *cmd) {
        word = strtok_r(NULL, " ", &word_ret)) {
     if (*word == '&' && !strtok_r(NULL, " ", &word_ret)) {
       cmd->bg = 1;
+      i += 1;
       break;
     } else {
       strcpy(cmd->argv[i], word);
@@ -96,4 +97,5 @@ void parse_cmd(char *word_ret, struct command *cmd) {
     }
     i += 1;
   }
+  cmd->arg_ptrs[i] = NULL;
 }
