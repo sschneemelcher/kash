@@ -58,62 +58,39 @@ void parse_input(char *input, struct command *cmd) {
   if (input[0] == '\n') {
     cmd->builtin = EMPTY;
   }
+  char *line_ret, *word_ret;
+  char *line = strtok_r(input, "\n;", &line_ret);
+  char *word = strtok_r(line, "\n \t\r\v\f", &word_ret);
 
-  char *word = strtok(input, " ");
-
-  if (word[0] == 'e' && word[1] == 'x' && word[2] == 'i' && word[3] == 't' &&
-      (word[4] == '\n' || word[4] == '\0')) {
+  if ((strcmp(word, "exit") == 0)) {
     cmd->builtin = EXIT;
-    return;
   } else if (word[0] == 'c' && word[1] == 'd') {
     cmd->builtin = CD;
-    if (word[2] == '\n') {
-      cmd->arg_ptrs[0] = HOME;
-      return;
-    } else if (word[2] == '\0') {
-      char *path = strtok(NULL, " ");
-      int i = 0;
-      while (*path != '\n' && *path != '\n' && i < MAX_CMD) {
-        cmd->argv[0][i] = *path;
-        path += 1;
-        i += 1;
-      }
-      cmd->argv[0][i] = '\0';
-      cmd->arg_ptrs[0] = cmd->argv[0];
-      return;
+    char *path = strtok_r(NULL, " ", &word_ret);
+    if (path == NULL) {
+      strcpy(cmd->argv[0], HOME);
+    } else {
+      strcpy(cmd->argv[0], path);
     }
+    cmd->arg_ptrs[0] = cmd->argv[0];
+  } else {
+    strcpy(cmd->argv[0], word);
+    cmd->arg_ptrs[0] = cmd->argv[0];
+    cmd->builtin = NONE;
+    parse_cmd(word_ret, cmd);
   }
-  cmd->builtin = NONE;
-  // parse_cmd(char* cmd, struct command *cmd);
 }
 
-void parse_from_index(char *input, int index, struct command *cmd) {
-  int word = 0;
-  int word_idx = 0;
-  int max_args = MAX_ARGS - 1;
-  if (cmd->builtin == CD) {
-    max_args = 1;
-  }
-  while (index < MAX_INPUT - 1 && word_idx < MAX_CMD - 1 && word < max_args &&
-         input[index] != 0) {
-    cmd->argv[word][word_idx] = input[index];
-    index += 1;
-    word_idx += 1;
-    if (input[index] == ' ') {
-      cmd->argv[word][word_idx] = '\0';
-      cmd->arg_ptrs[word] = cmd->argv[word];
-      index += 1;
-      word += 1;
-      word_idx = 0;
-    } else if (input[index] == '\n') {
-      cmd->argv[word][word_idx] = '\0';
-      cmd->arg_ptrs[word] = cmd->argv[word];
-      if (index != 0)
-        word += 1;
-      break;
+void parse_cmd(char *word_ret, struct command *cmd) {
+  for (char *word = strtok_r(NULL, " ", &word_ret); word;
+       word = strtok_r(NULL, " ", &word_ret)) {
+    if (*word == '&' && !strtok_r(NULL, " ", &word_ret)) {
+      cmd->bg = 1;
+      return;
+    } else {
+      strcpy(cmd->argv[0], word);
+      cmd->arg_ptrs[0] = cmd->argv[0];
     }
+    cmd->bg = 0;
   }
-  cmd->arg_ptrs[word] = NULL;
-  cmd->argc = word;
-  cmd->bg = 0;
 }

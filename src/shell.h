@@ -24,11 +24,11 @@ struct command {
 int shell_loop(char **env);
 void print_prompt(char *cwd, char *prompt);
 void parse_input(char *input, struct command *cmd);
-void parse_from_index(char *input, int index, struct command *cmd);
 void run(struct command cmd, char **env);
 void run_builtin(struct command cmd, char **env);
 void handle_keys(char *input);
 char *get_completion(char *line, char *comp);
+void parse_cmd(char *word_ret, struct command *cmd);
 
 int getch() {
   struct termios raw_mode, buffered_mode;
@@ -50,18 +50,18 @@ void print_prompt(char *cwd, char *prompt) {
 }
 
 /* TODO should return a completion based on input */
-char* get_completion(char *line, char *comp) {
-    comp[0] = '\0';
-    return comp;
+char *get_completion(char *line, char *comp) {
+  comp[0] = '\0';
+  return comp;
 }
 
 void run(struct command cmd, char **env) {
-  pid_t pid;
-  int result =
-      posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
-  if (result == 0) {
-    waitpid(pid, &result, 0);
-  }
+   pid_t pid;
+   int result =
+       posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
+   if (result == 0) {
+     waitpid(pid, &result, 0);
+   }
 }
 
 void handle_keys(char *input) {
