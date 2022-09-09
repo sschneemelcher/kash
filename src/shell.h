@@ -56,12 +56,20 @@ char *get_completion(char *line, char *comp) {
 }
 
 void run(struct command cmd, char **env) {
-   pid_t pid;
-   int result =
-       posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
-   if (result == 0) {
-     waitpid(pid, &result, 0);
-   }
+  // pid_t pid;
+  // int result =
+  //     posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
+  // if (result == 0) {
+  //   waitpid(pid, &result, 0);
+  // }
+  const int pid = fork();
+  if (pid != 0) {
+    int result = 0;
+    if (!cmd.bg)
+      waitpid(pid, &result, 0);
+  } else {
+    execvp(cmd.argv[0], cmd.arg_ptrs);
+  }
 }
 
 void handle_keys(char *input) {

@@ -57,6 +57,7 @@ void parse_input(char *input, struct command *cmd) {
 
   if (input[0] == '\n') {
     cmd->builtin = EMPTY;
+    return;
   }
   char *line_ret, *word_ret;
   char *line = strtok_r(input, "\n;", &line_ret);
@@ -82,8 +83,8 @@ void parse_input(char *input, struct command *cmd) {
 }
 
 void parse_cmd(char *word_ret, struct command *cmd) {
-    int i = 1;
-    cmd->bg = 0;
+  int i = 1;
+  cmd->bg = 0;
   for (char *word = strtok_r(NULL, " ", &word_ret); word;
        word = strtok_r(NULL, " ", &word_ret)) {
     if (*word == '&' && !strtok_r(NULL, " ", &word_ret)) {
@@ -93,6 +94,6 @@ void parse_cmd(char *word_ret, struct command *cmd) {
       strcpy(cmd->argv[i], word);
       cmd->arg_ptrs[i] = cmd->argv[i];
     }
-    i+=1;
+    i += 1;
   }
 }
