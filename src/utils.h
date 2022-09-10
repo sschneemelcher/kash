@@ -3,7 +3,12 @@ enum {
   MAX_PATH = 128,
   MAX_PROMPT = 256,
   MAX_ARGS = 16,
-  MAX_CMD = 32
+  MAX_CMD = 32,
+};
+
+enum session_t {
+    INTERACTIVE,
+    NONINTERACTIVE,
 };
 
 struct command {

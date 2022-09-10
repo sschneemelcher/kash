@@ -7,6 +7,21 @@
 #include <unistd.h>
 
 void run(struct command cmd, char **env) {
+  switch (cmd.builtin) {
+  case NONE:
+    run_cmd(cmd, env);
+    break;
+  case CD:
+    run_cd(cmd);
+    break;
+  case EXIT:
+    exit(EXIT_SUCCESS);
+  case EMPTY:
+    break;
+  }
+}
+
+void run_cmd(struct command cmd, char **env) {
   pid_t pid;
   if (!cmd.bg) {
     int result =
