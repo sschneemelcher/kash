@@ -57,19 +57,12 @@ void handle_keys(char *input) {
     case 8:   // backspace
     case 127: // delete
       if (index > 0) {
-        printf("\033[s"); // save current cursor position
-        printf("\033[D");
         index -= 1;
+        // move content of input to the left
+        memcpy((input + index), (input + index + 1), end - index);
         end -= 1;
-        if (index < end) {
-          int i = index;
-          while (i < end) {
-            input[i] = input[i + 1];
-            printf("%c", input[i]);
-            i += 1;
-          }
-        }
-        printf(" \033[u\033[D");
+        input[end] = 0;
+        printf("\033[D\033[s\033[0J%s\033[u", &input[index]);
       }
       break;
     case '\t': {
@@ -84,8 +77,8 @@ void handle_keys(char *input) {
       printf("%s", comp);
     } break;
     case '\n':
-      input[index] = '\n';
-      input[index + 1] = '\0';
+      input[end] = '\n';
+      input[end + 1] = '\0';
       printf("\n");
       return;
     default:

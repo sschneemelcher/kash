@@ -1,11 +1,10 @@
 #include "utils.h"
 #include "run.h"
 #include <spawn.h>
-#include <sys/wait.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-
+#include <sys/wait.h>
+#include <unistd.h>
 
 void run(struct command cmd, char **env) {
   pid_t pid;
@@ -20,19 +19,8 @@ void run(struct command cmd, char **env) {
   }
 }
 
-
-void run_builtin(struct command cmd, char **env) {
-  switch (cmd.builtin) {
-  case NONE:
-  case EMPTY:
-    break;
-  case CD: {
-    if (chdir(cmd.arg_ptrs[0])) { // this is true if cd returns an error
-      printf("-kash: cd: %s: No such file or directory\n", cmd.arg_ptrs[0]);
-    }
-    break;
-  };
-  case EXIT:
-    exit(0);
+void run_cd(struct command cmd) {
+  if (chdir(cmd.arg_ptrs[0])) { // this is true if cd returns an error
+    printf("-kash: cd: %s: No such file or directory\n", cmd.arg_ptrs[0]);
   }
 }

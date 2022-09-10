@@ -1,11 +1,12 @@
-#include "main.h"
 #include "utils.h"
+#include "main.h"
 #include "keys.h"
-#include "prompt.h"
 #include "parse.h"
+#include "prompt.h"
 #include "run.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 
 void intHandler(int dummy) {}
 
@@ -16,20 +17,27 @@ int main(int argc, char **argv, char **envp) {
 }
 
 int shell_loop(char **env) {
-  char prompt[MAX_PROMPT] = "$ ";
   char input[MAX_INPUT] = "";
-  char cwd[MAX_PATH] = "";
+  char prompt[MAX_PROMPT] = "";
+  struct command cmd;
+
   while (1) {
-    getcwd(cwd, MAX_PATH);
-    print_prompt(cwd, prompt);
+    print_prompt(prompt);
     handle_keys(input);
-    struct command cmd;
+    printf("\n%s\n", input);
     parse_input(input, &cmd);
-    if (cmd.builtin == NONE) {
+    switch (cmd.builtin) {
+    case NONE:
       run(cmd, env);
-    } else {
-      run_builtin(cmd, env);
+      break;
+    case CD:
+      run_cd(cmd);
+      break;
+    case EXIT:
+      return EXIT_SUCCESS;
+    case EMPTY:
+      break;
     }
   }
-  return 0;
+  return EXIT_SUCCESS;
 }

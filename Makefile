@@ -1,4 +1,5 @@
 CC = clang
+#CC = zig cc
 CFLAGS  = -Wall -g -Ofast
 OBJ = main.o keys.o prompt.o run.o parse.o
 
