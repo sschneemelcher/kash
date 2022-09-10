@@ -48,6 +48,7 @@ void handle_keys(char *input) {
       }
     } break;
     case '\n':
+    case 4: // eot
       input[end] = '\0';
       printf("\n");
       return;

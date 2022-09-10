@@ -16,9 +16,8 @@ void parse_input(char *input, struct command *cmd) {
     cmd->builtin = EMPTY;
     return;
   }
-  char *line_ret, *word_ret;
-  char *line = strtok_r(input, "\n;", &line_ret);
-  char *word = strtok_r(line, "\n \t\r\v\f", &word_ret);
+  char *word_ret;
+  char *word = strtok_r(input, "\n \t\r\v\f", &word_ret);
 
   if ((strcmp(word, "exit") == 0)) {
     cmd->builtin = EXIT;
