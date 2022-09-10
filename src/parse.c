@@ -1,51 +1,8 @@
-#include "shell.h"
-#include <signal.h>
+#include "utils.h"
+#include "parse.h"
+#include <string.h>
 
-void intHandler(int dummy) {}
-
-char *HOME;
-
-int main(int argc, char **argv, char **envp) {
-  HOME = getenv("HOME");
-  signal(SIGINT, intHandler);
-  shell_loop(envp);
-  return 0;
-}
-
-int shell_loop(char **env) {
-  char prompt[MAX_PROMPT] = "$ ";
-  char input[MAX_INPUT] = "";
-  char cwd[MAX_PATH] = "";
-  while (1) {
-    getcwd(cwd, MAX_PATH);
-    print_prompt(cwd, prompt);
-    handle_keys(input);
-    struct command cmd;
-    parse_input(input, &cmd);
-    if (cmd.builtin == NONE) {
-      run(cmd, env);
-    } else {
-      run_builtin(cmd, env);
-    }
-  }
-  return 0;
-}
-
-void run_builtin(struct command cmd, char **env) {
-  switch (cmd.builtin) {
-  case NONE:
-  case EMPTY:
-    break;
-  case CD: {
-    if (chdir(cmd.arg_ptrs[0])) { // this is true if cd returns an error
-      printf("-kash: cd: %s: No such file or directory\n", cmd.arg_ptrs[0]);
-    }
-    break;
-  };
-  case EXIT:
-    exit(0);
-  }
-}
+char * HOME = "/";
 
 void parse_input(char *input, struct command *cmd) {
 
