@@ -24,7 +24,6 @@ int shell_loop(char **env) {
   while (1) {
     print_prompt(prompt);
     handle_keys(input);
-    printf("\n%s\n", input);
     parse_input(input, &cmd);
     switch (cmd.builtin) {
     case NONE:
