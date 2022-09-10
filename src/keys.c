@@ -27,10 +27,10 @@ void handle_keys(char *input) {
   int key = 0;
   int end = 0;
   int index = 0;
+  input[0] = 0;
   while (end < MAX_INPUT) {
-    key = getch();
-    switch (key) {
-    case 27: // Arrow Keys emit 27 and
+    switch (key = getch()) {
+    case 27: // Arrow Keys emit 27 and 91
       index += arrow(index, end);
       break;
     case '\t': {
@@ -44,7 +44,7 @@ void handle_keys(char *input) {
         }
         memcpy((input + end), comp, index);
         end = index;
-        printf("%s", comp);
+        printf("%.*s", index, comp);
       }
     } break;
     case '\n':
@@ -63,29 +63,19 @@ void handle_keys(char *input) {
       }
       break;
     default:
-      if (index < end) {
-        int i = end;
-        printf("\033[%uC", end - index); // got to end of input
-        end += 1;
-        while (i > index) {
-          input[i] = input[i - 1];
-          printf("%c\033[2D", input[i]);
-          i -= 1;
-        }
-      }
+      // like deleting in reverse
+      end += 1;
+      memcpy((input + index + 1), (input + index), end - index);
       input[index] = key;
+      printf("\033[s\033[0J%s\033[u\033[C", &input[index]);
       index += 1;
-      if (index > end) {
-        end += 1;
-      }
-      printf("%c", key);
       break;
     }
   }
 }
 
 int arrow(int index, int end) {
-  getch(); // 91 but we dont need the 91
+  getch(); // we dont need the 91
   switch (getch()) {
   case 'A': // Up
     break;

@@ -8,7 +8,9 @@ all: kash
 kash: $(OBJ)
 	test -e build || mkdir build
 	$(CC) $(CFLAGS) $(OBJ) -o build/kash 
-	rm *.o
 
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $^
+
+clean:
+	rm *.o
