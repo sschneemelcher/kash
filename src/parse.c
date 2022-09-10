@@ -1,8 +1,8 @@
 #include "utils.h"
 #include "parse.h"
 #include <string.h>
-
-char * HOME = "/";
+#include <stdlib.h>
+#include <stdio.h>
 
 void parse_input(char *input, struct command *cmd) {
 
@@ -26,7 +26,7 @@ void parse_input(char *input, struct command *cmd) {
     cmd->builtin = CD;
     char *path = strtok_r(NULL, " ", &word_ret);
     if (path == NULL) {
-      strcpy(cmd->argv[0], HOME);
+      strcpy(cmd->argv[0], getenv("HOME"));
     } else {
       strcpy(cmd->argv[0], path);
     }

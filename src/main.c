@@ -7,11 +7,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-
 void intHandler(int dummy) {}
 
 int main(int argc, char **argv, char **envp) {
-  HOME = getenv("HOME");
   signal(SIGINT, intHandler);
   shell_loop(envp);
   return 0;
