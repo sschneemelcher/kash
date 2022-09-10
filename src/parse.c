@@ -12,7 +12,7 @@ void parse_input(char *input, struct command *cmd) {
    * the command itself
    */
 
-  if (input[0] == '\n') {
+  if (input[0] == '\0') {
     cmd->builtin = EMPTY;
     return;
   }
@@ -44,9 +44,8 @@ void parse_cmd(char *word_ret, struct command *cmd) {
   cmd->bg = 0;
   for (char *word = strtok_r(NULL, " ", &word_ret); word;
        word = strtok_r(NULL, " ", &word_ret)) {
-    if (*word == '&' && !strtok_r(NULL, " ", &word_ret)) {
+    if (!strcmp(word, "&") && !strtok_r(NULL, " ", &word_ret)) {
       cmd->bg = 1;
-      i += 1;
       break;
     } else {
       strcpy(cmd->argv[i], word);
