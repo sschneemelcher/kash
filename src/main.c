@@ -12,15 +12,21 @@ void intHandler(int dummy) {}
 
 int main(int argc, char **argv, char **envp) {
   signal(SIGINT, intHandler);
-  if (argc == 1) {
-    shell_loop(envp, INTERACTIVE, "");
-  } else {
-    shell_loop(envp, NONINTERACTIVE, argv[1]);
+  int opt, sess = INTERACTIVE;
+  char *inp;
+  while ((opt = getopt(argc, argv, "c:")) != -1) {
+    switch (opt) {
+    case 'c':
+      inp = optarg;
+      sess = NONINTERACTIVE;
+      break;
+    }
   }
+  shell_loop(envp, sess, inp);
   return 0;
 }
 
-int shell_loop(char **env, enum session_t sess, char* inp) {
+int shell_loop(char **env, enum session_t sess, char *inp) {
   struct command cmd;
   char input[MAX_INPUT] = "";
   if (sess == INTERACTIVE) {
