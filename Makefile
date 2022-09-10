@@ -1,12 +1,16 @@
 CC = clang
+#CC = zig cc
 CFLAGS  = -Wall -g -Ofast
-OBJ = shell.o
+OBJ = main.o keys.o prompt.o run.o parse.o
 
-all: $(OBJ)
-	test -e ./bin || mkdir ./bin
-	$(CC) $(CFLAGS) -o bin/kash  $(OBJ) 
-	rm $(OBJ)
+all: kash
 
-shell.o: src/shell.c
-	$(CC) $(CFLAGS) -c $<
+kash: $(OBJ)
+	test -e build || mkdir build
+	$(CC) $(CFLAGS) $(OBJ) -o build/kash 
 
+%.o: src/%.c
+	$(CC) $(CFLAGS) -c $^
+
+clean:
+	rm *.o
