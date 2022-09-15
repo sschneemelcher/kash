@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <string.h>
 
 int run(struct command cmd, char **env) {
   switch (cmd.builtin) {
@@ -27,8 +28,12 @@ void run_cmd(struct command cmd, char **env) {
   if (!cmd.bg) {
     int result =
         posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
-    if (result == 0) {
-      waitpid(pid, &result, 0);
+    switch (result) {
+        case 0: waitpid(pid, &result, 0);
+                break;
+        case 2: printf("-kash: %s: command not found\n", cmd.arg_ptrs[0]);
+                break;
+        default: printf("-kash: %s\n", strerror(result));
     }
   } else {
     posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
