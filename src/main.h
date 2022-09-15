@@ -1,2 +1,2 @@
-int shell_loop(char **env, enum session_t sess, char* inp);
+int shell_loop(char **env, enum session_t sess, FILE* inp);
 void intHandler(int dummy);

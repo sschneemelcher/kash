@@ -6,7 +6,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void run(struct command cmd, char **env) {
+int run(struct command cmd, char **env) {
   switch (cmd.builtin) {
   case NONE:
     run_cmd(cmd, env);
@@ -15,10 +15,11 @@ void run(struct command cmd, char **env) {
     run_cd(cmd);
     break;
   case EXIT:
-    exit(EXIT_SUCCESS);
+    return 1;
   case EMPTY:
     break;
   }
+  return 0;
 }
 
 void run_cmd(struct command cmd, char **env) {
