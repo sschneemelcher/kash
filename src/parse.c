@@ -54,12 +54,12 @@ void parse_cmd(char *word_ret, struct command *cmd) {
     } else if (word[0] == '\"') {
       word += 1; // get rid of quation mark
       int len = strlen(word);
-      memcpy(cmd->argv[i], word, MAX_CMD);
+      memcpy(cmd->argv[i], word, MAX_CMD - 1);
       word = strtok_r(NULL, "\"", &word_ret);
-      cmd->argv[i][MIN(MAX_CMD, len)] = ' ';
+      cmd->argv[i][MIN(MAX_CMD - 1, len)] = ' ';
       memcpy(cmd->argv[i] + MIN(MAX_CMD - 1, len + 1), word,
              MAX(MAX_CMD - 1 - (len + 1), 0));
-      len += strlen(word) + 1;
+      len += 1 + strlen(word); // one for the space and len of word
       cmd->argv[i][MIN(MAX_CMD - 1, len)] = 0;
       cmd->arg_ptrs[i] = cmd->argv[i];
     } else {
