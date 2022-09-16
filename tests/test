@@ -1,12 +1,14 @@
 #!/bin/ksh
 
+
 test() {
     CMD="$1"
     no="$2"
-    kash_out=$(printf "%s" "$CMD" | ./build/kash)
-    ksh_out=$(printf "%s" "$CMD" | ksh)
+    kash_out=$(printf "%s" "$CMD" | ./build/kash 2>&1)
+    ksh_out=$(printf "%s" "$CMD" | ksh 2>&1)
     if [ "$kash_out" = "$ksh_out" ]; then
         printf "%s: %s: \033[32mpassed\033[0m\n" "$no" "$CMD"
+        passed=$((passed + 1))
     else
         printf "%s: %s: \033[31mfailed\033[0m\n" "$no" "$CMD"
         #printf "kash: \033[4m\033[31m%s\033[0m; ksh: \033[4m\033[32m%s\033[0m\n" "$kash_out" "$ksh_out"
@@ -22,6 +24,9 @@ cmds=("ls"
     "ls | wc -l"
     'printf "%s\n" "$HOME"')
 
+passed=0
+
 for i in $(seq 0 $((${#cmds[@]} - 1))); do
     test "${cmds[$i]}" "$i"
 done
+printf "%d of %d tests passed.\n" $passed ${#cmds[@]}
