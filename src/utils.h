@@ -7,8 +7,8 @@ enum {
 };
 
 enum session_t {
-    INTERACTIVE,
-    NONINTERACTIVE,
+  INTERACTIVE,
+  NONINTERACTIVE,
 };
 
 struct command {
@@ -18,3 +18,6 @@ struct command {
   int bg;
   enum builtin_t { NONE, EXIT, CD, EMPTY } builtin;
 };
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))

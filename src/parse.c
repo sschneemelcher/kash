@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-
 char *SPACE_SEP = "\n \t\r\v\f";
 
 void parse_input(char *input, struct command *cmd) {
@@ -51,22 +48,22 @@ void parse_cmd(char *word_ret, struct command *cmd) {
     if (!strcmp(word, "&") && !strtok_r(NULL, " ", &word_ret)) {
       cmd->bg = 1;
       break;
-    } else if (word[0] == '\"') {
-      word += 1; // get rid of quation mark
-      int len = strlen(word);
-      memcpy(cmd->argv[i], word, MAX_CMD - 1);
-      word = strtok_r(NULL, "\"", &word_ret);
-      cmd->argv[i][MIN(MAX_CMD - 1, len)] = ' ';
-      memcpy(cmd->argv[i] + MIN(MAX_CMD - 1, len + 1), word,
-             MAX(MAX_CMD - 1 - (len + 1), 0));
-      len += 1 + strlen(word); // one for the space and len of word
-      cmd->argv[i][MIN(MAX_CMD - 1, len)] = 0;
-      cmd->arg_ptrs[i] = cmd->argv[i];
+    } else if (word[0] == '\"' || word[0] == '\'') {
+      char sep[2] = {word[0], 0};
+      char *quote_start = word + 1;
+      *(word_ret - 1) = ' ';
+      if (strtok_r(NULL, sep, &word_ret)) {
+        memcpy(cmd->argv[i], quote_start, MAX_CMD);
+        cmd->argv[i][MAX_CMD - 1] = 0;
+      }
     } else {
       strcpy(cmd->argv[i], word);
-      cmd->arg_ptrs[i] = cmd->argv[i];
     }
+    cmd->arg_ptrs[i] = cmd->argv[i];
     i += 1;
   }
   cmd->arg_ptrs[i] = NULL;
 }
+
+void parse_quote(char *word, char word_ret[MAX_INPUT], char buf[MAX_CMD],
+                 char mark) {}

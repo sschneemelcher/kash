@@ -1,6 +1,5 @@
 #!/bin/ksh
 
-
 test() {
     CMD="$1"
     no="$2"
@@ -21,6 +20,7 @@ cmds=("ls"
     "echo hello world"
     'echo "hello world"'
     "echo 'hello world'"
+    "echo '  \"hello world'"
     "ls | wc -l"
     'printf "%s\n" "$HOME"')
 
