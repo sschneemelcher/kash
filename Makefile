@@ -3,7 +3,7 @@ CC = clang
 CFLAGS  = -Wall -g -Ofast
 OBJ = main.o keys.o prompt.o run.o parse.o
 
-all: kash
+all: kash test
 
 kash: $(OBJ)
 	test -e build || mkdir build
@@ -14,3 +14,6 @@ kash: $(OBJ)
 
 clean:
 	rm *.o
+
+test:
+	./tests/test

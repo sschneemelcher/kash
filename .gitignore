@@ -1,7 +1,7 @@
 bin/
 build/
 .ccls-cache
-test*
+test*.sh
 
 # Prerequisites
 *.d
