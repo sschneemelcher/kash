@@ -1,5 +1,5 @@
-#include "keys.h"
 #include "utils.h"
+#include "keys.h"
 #include <stdio.h>
 #include <string.h>
 #include <termios.h>
@@ -23,7 +23,7 @@ int get_completion(char *line, char *comp) {
   return strlen(comp);
 }
 
-void handle_keys(char *input) {
+void handle_keys(char *input, char history[MAX_HISTORY + 1][MAX_INPUT + 1], int history_idx) {
   int key = 0;
   int end = 0;
   int index = 0;
@@ -31,7 +31,32 @@ void handle_keys(char *input) {
   while (end < MAX_INPUT) {
     switch (key = getch()) {
     case 27: // Arrow Keys emit 27 and 91
-      index += arrow(index, end);
+      switch (arrow(index, end)) {
+      case 1:
+        index += 1;
+        break;
+      case -1:
+        index -= 1;
+        break;
+      case 2:
+        history_idx = MOD(history_idx - 1, MAX_HISTORY);
+        strcpy(input, history[history_idx]);
+        if (index > 0)
+            printf("\033[%iD",index);
+        printf("\033[0K%s", input);
+        index = strlen(input);
+        end = index;
+        break;
+      case -2:
+       history_idx = MOD(history_idx + 1, MAX_HISTORY) ;
+        strcpy(input, history[history_idx]);
+        if (index > 0)
+            printf("\033[%iD",index);
+        printf("\033[0K%s", input);
+        index = strlen(input);
+        end = index;
+        break;
+      }
       break;
     case '\t': {
       if (index == end) {
@@ -79,8 +104,10 @@ int arrow(int index, int end) {
   getch(); // we dont need the 91
   switch (getch()) {
   case 'A': // Up
+    return 2;
     break;
   case 'B': // Down
+    return -2;
     break;
   case 'C': // Right
     if (index < end) {

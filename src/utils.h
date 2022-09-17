@@ -1,10 +1,9 @@
-enum {
-  MAX_INPUT = 1024,
-  MAX_PATH = 128,
-  MAX_PROMPT = 256,
-  MAX_ARGS = 16,
-  MAX_CMD = 32,
-};
+#define MAX_INPUT 256
+#define MAX_PATH 128
+#define MAX_PROMPT 256
+#define MAX_ARGS 16
+#define MAX_CMD 32
+#define MAX_HISTORY 10
 
 enum session_t {
   INTERACTIVE,
@@ -21,3 +20,4 @@ struct command {
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MOD(a, b) ((a % b + b) % b)
