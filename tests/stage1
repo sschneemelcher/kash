@@ -1,0 +1,44 @@
+#!/bin/ksh
+
+
+test() {
+    CMD="$1"
+    no="$2"
+    kash_out=$(printf "%s" "$CMD" | ./build/kash 2>&1)
+    ksh_out=$(printf "%s" "$CMD" | ksh 2>&1)
+    if [ "$kash_out" = "$ksh_out" ]; then
+        if [ "$verbosity" -gt 0 ]; then
+            printf "%s: %s: \033[32mpassed\033[0m\n" "$no" "$CMD"
+        fi
+        passed=$((passed + 1))
+    else
+        if [ "$verbosity" -gt 0 ]; then
+            printf "%s: %s: \033[31mfailed\033[0m\n" "$no" "$CMD"
+        fi
+        if [ "$verbosity" -gt 1 ]; then
+            printf "kash: \033[4m\033[31m%s\033[0m; ksh: \033[4m\033[32m%s\033[0m\n" "$kash_out" "$ksh_out"
+        fi
+    fi
+}
+
+
+cmds=("ls"
+    "exit"
+    "exit; echo hello"
+    "echo hello world"
+    'echo "hello world"'
+    "echo 'hello world'"
+    "echo '  \"hello world'"
+    "ls | wc -l"
+    'printf "%s\n" "$HOME"')
+
+passed=0
+verbosity="$1"
+
+for i in $(seq 0 $((${#cmds[@]} - 1))); do
+    test "${cmds[$i]}" "$i"
+done
+
+
+printf "%d %d" $passed ${#cmds[@]}
+

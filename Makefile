@@ -1,7 +1,8 @@
 CC = clang
 #CC = zig cc
-CFLAGS  = -Wall -g -Ofast
+CFLAGS  = -Wall -pedantic -g -Ofast
 OBJ = main.o keys.o prompt.o run.o parse.o
+VERBOSITY = 0
 
 all: kash test
 
@@ -15,5 +16,5 @@ kash: $(OBJ)
 clean:
 	rm *.o
 
-test:
-	./tests/test
+test: 
+	./tests/test $(VERBOSITY)
