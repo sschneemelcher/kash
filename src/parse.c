@@ -58,17 +58,18 @@ void parse_input(char *input, struct command *cmd) {
     cmd->arg_ptrs[cmd_idx] = 0;
   }
 
+  cmd->builtin = NONE;
   if (strcmp(cmd->argv[0], "cd") == 0) {
     cmd->builtin = CD;
   } else if (cmd->argv[0][0] == 'e') {
     if (cmd->argv[0][1] == 'x') {
-      if (strcmp(&(cmd->argv[0][2]), "it") == 0)
+      if (strcmp(&(cmd->argv[0][2]), "it") == 0) {
         cmd->builtin = EXIT;
+      }
     } else if (cmd->argv[0][1] == 'c') {
-      if (strcmp(&(cmd->argv[0][2]), "ho") == 0)
+      if (strcmp(&(cmd->argv[0][2]), "ho") == 0) {
         cmd->builtin = ECHO;
+      }
     }
-  } else {
-    cmd->builtin = NONE;
   }
 }
