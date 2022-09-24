@@ -9,7 +9,6 @@ void parse_input(char *input, struct command *cmd) {
 
   if (*input == 0)
     return;
-
   char last_char = ' ';
   char quote = ' ';
   int cmd_idx = 0;
@@ -45,6 +44,7 @@ void parse_input(char *input, struct command *cmd) {
     }
   }
 
+  cmd->bg = 0;
   if (len > 0) {
     if (len == 1 && cmd->argv[cmd_idx][0] == '&') {
       cmd->bg = 1;
