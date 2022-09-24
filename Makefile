@@ -1,7 +1,7 @@
 #CC = clang
 CC = zig cc
 CFLAGS  = -Wall -pedantic -g -Ofast
-OBJ = main.o keys.o prompt.o run.o parse.o
+OBJ = main.o keys.o prompt.o run.o parse.o utils.o
 VERBOSITY = 0
 
 all: kash test

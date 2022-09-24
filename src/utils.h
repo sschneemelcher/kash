@@ -31,3 +31,4 @@ struct command {
   enum builtin_t { NONE, EXIT, CD, EMPTY, ECHO } builtin;
 };
 
+int hash(char* string, int length);
