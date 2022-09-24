@@ -6,35 +6,36 @@
 
 void parse_input(char *input, struct command *cmd) {
 
-  /* we need to parse the line we got
-   * execvp needs a char* with the command,
-   * and a char** for the arguments (including)
-   * the command itself
-   */
+  if (*input == 0) return;
 
   char last_char = ' ';
   char quote = ' ';
   int cmd_idx = 0;
   int len = 0;
   while (*input != 0 && len < MAX_CMD) {
-    if (*input == ' ' && last_char != ' ' && quote == ' ') {
+    if (IS_WS(*input) && !IS_WS(last_char) && quote == ' ') {
+      /* split args on whitespace */
       last_char = ' ';
       cmd->argv[cmd_idx][len] = 0;
       cmd->arg_ptrs[cmd_idx] = cmd->argv[cmd_idx];
       input += 1;
       cmd_idx += 1;
       len = 0;
-    } else if (*input == ' ' && last_char == ' ' && quote == ' ') {
+    } else if (IS_WS(*input) && IS_WS(last_char) && quote == ' ') {
+      /* skip additional whitespaces */
       input += 1;
       last_char = *input;
     } else if ((*input == '\'' || *input == '"') && quote == ' ') {
-        quote = *input;
-        input += 1;
-        last_char = quote;
+      /* beginning of a quote with either ' or " */
+      quote = *input;
+      input += 1;
+      last_char = quote;
     } else if (*input == quote) {
-        *input = ' ';
-        quote = ' ';
+      /* end of quote */
+      *input = ' ';
+      quote = ' ';
     } else {
+      /* everything else - write args into cmd struct */
       last_char = *input;
       cmd->argv[cmd_idx][len] = last_char;
       len += 1;
@@ -44,19 +45,18 @@ void parse_input(char *input, struct command *cmd) {
 
   if (len > 0) {
     if (len == 1 && cmd->argv[cmd_idx][0] == '&') {
-        cmd->bg = 1;
-        cmd->arg_ptrs[cmd_idx] = 0;
-      } else {
-        cmd->argv[cmd_idx][len] = 0;
-        cmd->arg_ptrs[cmd_idx] = cmd->argv[cmd_idx];
-        cmd->arg_ptrs[cmd_idx + 1] = 0;
-      }
+      cmd->bg = 1;
+      cmd->arg_ptrs[cmd_idx] = 0;
+    } else {
+      cmd->argv[cmd_idx][len] = 0;
+      cmd->arg_ptrs[cmd_idx] = cmd->argv[cmd_idx];
+      cmd->arg_ptrs[cmd_idx + 1] = 0;
+    }
   } else {
     cmd->arg_ptrs[cmd_idx] = 0;
   }
 
-  if (cmd->argv[0][0] == 'c' && cmd->argv[0][1] == 'd' &&
-      cmd->argv[0][2] == 0) {
+  if (strcmp(cmd->argv[0], "cd") == 0) {
     cmd->builtin = CD;
   } else if (cmd->argv[0][0] == 'e') {
     if (cmd->argv[0][1] == 'x') {

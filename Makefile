@@ -18,3 +18,4 @@ clean:
 
 test: 
 	./tests/test $(VERBOSITY)
+

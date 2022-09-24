@@ -21,3 +21,6 @@ struct command {
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MOD(a, b) ((a % b + b) % b)
+
+#define IS_WS(a)                                                               \
+  (a == ' ' || a == '\t' || a == '\r' || a == '\v' || a == '\f')
