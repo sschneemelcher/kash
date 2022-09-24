@@ -1,4 +1,5 @@
 #include "utils.h"
+
 #include "parse.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,7 +7,8 @@
 
 void parse_input(char *input, struct command *cmd) {
 
-  if (*input == 0) return;
+  if (*input == 0)
+    return;
 
   char last_char = ' ';
   char quote = ' ';

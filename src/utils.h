@@ -5,6 +5,19 @@
 #define MAX_CMD 32
 #define MAX_HISTORY 10
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MOD(a, b) ((a % b + b) % b)
+
+#define IS_WS(a)                                                               \
+  (a == ' ' || a == '\t' || a == '\r' || a == '\v' || a == '\f')
+
+
+struct array {
+    void* values;
+    int length;
+};
+
 enum session_t {
   INTERACTIVE,
   NONINTERACTIVE,
@@ -18,9 +31,3 @@ struct command {
   enum builtin_t { NONE, EXIT, CD, EMPTY, ECHO } builtin;
 };
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MOD(a, b) ((a % b + b) % b)
-
-#define IS_WS(a)                                                               \
-  (a == ' ' || a == '\t' || a == '\r' || a == '\v' || a == '\f')

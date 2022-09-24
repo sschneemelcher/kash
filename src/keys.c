@@ -1,4 +1,5 @@
 #include "utils.h"
+
 #include "keys.h"
 #include <stdio.h>
 #include <string.h>
@@ -23,7 +24,7 @@ int get_completion(char *line, char *comp) {
   return strlen(comp);
 }
 
-void handle_keys(char *input, char history[MAX_HISTORY + 1][MAX_INPUT + 1], int history_idx) {
+void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT], int history_idx) {
   int key = 0;
   int end = 0;
   int index = 0;

@@ -1,44 +1,48 @@
 #include "utils.h"
-#include <stdio.h>
-#include "main.h"
+
 #include "keys.h"
+#include "main.h"
 #include "parse.h"
 #include "prompt.h"
 #include "run.h"
+#include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/errno.h>
-#include <fcntl.h>
+#include <unistd.h>
 
 void intHandler(int dummy) {}
 
 int main(int argc, char **argv, char **envp) {
   signal(SIGINT, intHandler);
-  int opt, sess = INTERACTIVE;
-  char *inp;
+  int opt;
+  char inp[MAX_INPUT] = {0};
+  enum session_t tsession = INTERACTIVE;
   while ((opt = getopt(argc, argv, "c:")) != -1) {
     switch (opt) {
     case 'c':
-      inp = optarg;
-      sess = NONINTERACTIVE;
+      memcpy(inp, optarg, MAX_INPUT);
+      inp[MAX_INPUT - 1] = 0;
+      tsession = NONINTERACTIVE;
       break;
     }
   }
 
   if (!isatty(STDIN_FILENO)) {
-    shell_loop(envp, NONINTERACTIVE, STDIN_FILENO);
+    shell_loop(envp, NONINTERACTIVE, STDIN_FILENO, NULL);
   } else if (optind >= argc) {
-    shell_loop(envp, INTERACTIVE, 0);
+    shell_loop(envp, tsession, 0, inp);
   } else {
     int i = optind;
     while (i < argc) {
       int fp = open(argv[i], O_RDONLY);
       if (fp == 0) {
-        printf("-kash: unable to open file '%s': %s\n", argv[i], strerror(errno));
+        printf("-kash: unable to open file '%s': %s\n", argv[i],
+               strerror(errno));
         return 1;
       } else {
-        shell_loop(envp, NONINTERACTIVE, fp);
+        shell_loop(envp, NONINTERACTIVE, fp, NULL);
         close(fp);
       }
       i++;
@@ -47,14 +51,14 @@ int main(int argc, char **argv, char **envp) {
   }
 }
 
-int shell_loop(char **env, enum session_t sess, int inp) {
+int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   struct command cmd;
-  char history[MAX_HISTORY + 1][MAX_INPUT + 1];
+  char history[MAX_HISTORY][MAX_INPUT];
   for (int i = 0; i <= MAX_HISTORY; i++) {
     history[i][0] = '\0';
   }
-  char input[MAX_INPUT + 1] = "";
-  char prompt[MAX_PROMPT + 1] = "";
+  char input[MAX_INPUT] = "";
+  char prompt[MAX_PROMPT] = "";
 
   int history_idx = 0;
   while (1) {
@@ -62,8 +66,12 @@ int shell_loop(char **env, enum session_t sess, int inp) {
       print_prompt(prompt);
       handle_keys(input, history, history_idx);
     } else {
-      read(inp, input, MAX_INPUT);
-      input[MAX_INPUT] = 0;
+      if (input_str != 0) {
+        memcpy(input, input_str, MAX_INPUT);
+      } else {
+        read(input_fd, input, MAX_INPUT);
+      }
+      input[MAX_INPUT - 1] = 0;
     }
     strcpy(history[history_idx], input);
     history_idx = (history_idx + 1) % MAX_HISTORY;
@@ -71,8 +79,8 @@ int shell_loop(char **env, enum session_t sess, int inp) {
     for (char *line = strtok_r(input, "\n;", &line_ret); line;
          line = strtok_r(NULL, "\n;", &line_ret)) {
       parse_input(line, &cmd);
-      if(run(cmd, env))
-          return EXIT_SUCCESS;
+      if (run(cmd, env))
+        return EXIT_SUCCESS;
     }
     if (sess == NONINTERACTIVE)
       break;
