@@ -12,12 +12,9 @@ void parse_input(char *input, struct command *cmd) {
    * the command itself
    */
 
-  char *word = input;
   char last_char = ' ';
   char quote = ' ';
-  int word_start = 0;
   int cmd_idx = 0;
-  int input_idx = 0;
   int len = 0;
   while (*input != 0 && len < MAX_CMD) {
     if (*input == ' ' && last_char != ' ' && quote == ' ') {
@@ -25,18 +22,13 @@ void parse_input(char *input, struct command *cmd) {
       cmd->argv[cmd_idx][len] = 0;
       cmd->arg_ptrs[cmd_idx] = cmd->argv[cmd_idx];
       input += 1;
-      word = input;
-      input_idx += 1;
-      word_start = input_idx;
       cmd_idx += 1;
       len = 0;
     } else if (*input == ' ' && last_char == ' ' && quote == ' ') {
-      input_idx += 1;
       input += 1;
       last_char = *input;
     } else if ((*input == '\'' || *input == '"') && quote == ' ') {
         quote = *input;
-        input_idx += 1;
         input += 1;
         last_char = quote;
     } else if (*input == quote) {
@@ -46,18 +38,21 @@ void parse_input(char *input, struct command *cmd) {
       last_char = *input;
       cmd->argv[cmd_idx][len] = last_char;
       len += 1;
-      input_idx += 1;
       input += 1;
     }
   }
-  cmd->argv[cmd_idx][len] = 0;
-  if (strcmp(cmd->argv[cmd_idx], "&") == 0) {
-    cmd->arg_ptrs[cmd_idx] = 0;
-    cmd->bg = 1;
+
+  if (len > 0) {
+    if (len == 1 && cmd->argv[cmd_idx][0] == '&') {
+        cmd->bg = 1;
+        cmd->arg_ptrs[cmd_idx] = 0;
+      } else {
+        cmd->argv[cmd_idx][len] = 0;
+        cmd->arg_ptrs[cmd_idx] = cmd->argv[cmd_idx];
+        cmd->arg_ptrs[cmd_idx + 1] = 0;
+      }
   } else {
-    cmd->arg_ptrs[cmd_idx] = cmd->argv[cmd_idx];
-    cmd->arg_ptrs[cmd_idx + 1] = 0;
-    cmd->bg = 0;
+    cmd->arg_ptrs[cmd_idx] = 0;
   }
 
   if (cmd->argv[0][0] == 'c' && cmd->argv[0][1] == 'd' &&
