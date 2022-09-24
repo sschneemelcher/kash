@@ -4,6 +4,6 @@
 stages=("stage1")
 
 for stage in "${stages[@]}"; do
-    result="$(./tests/"$stage")"
+    result="$(./tests/"$stage" "$1")"
     printf "%s: %s from %s tests passed\n" "$stage" $result
 done

@@ -15,7 +15,7 @@ struct command {
   char argv[MAX_ARGS][MAX_CMD];
   char *arg_ptrs[MAX_CMD];
   int bg;
-  enum builtin_t { NONE, EXIT, CD, EMPTY } builtin;
+  enum builtin_t { NONE, EXIT, CD, EMPTY, ECHO } builtin;
 };
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))

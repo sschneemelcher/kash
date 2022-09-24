@@ -17,6 +17,9 @@ int run(struct command cmd, char **env) {
     break;
   case EXIT:
     return 1;
+  case ECHO:
+    echo(cmd);
+    break;
   case EMPTY:
     break;
   }
@@ -41,7 +44,27 @@ void run_cmd(struct command cmd, char **env) {
 }
 
 void run_cd(struct command cmd) {
-  if (chdir(cmd.arg_ptrs[0])) { // this is true if cd returns an error
-    printf("-kash: cd: %s: No such file or directory\n", cmd.arg_ptrs[0]);
+  char *dir;
+  if (cmd.arg_ptrs[1] == 0)
+      dir = getenv("HOME");
+  else if (cmd.arg_ptrs[1][0] == '-' && cmd.arg_ptrs[1][1] == 0)
+      dir = getenv("OLDPWD");
+  else
+      dir = cmd.arg_ptrs[1];
+      
+  if (chdir(dir)) { // this is true if cd returns an error
+    printf("-kash: cd: %s: No such file or directory\n", dir);
   }
+}
+
+
+void echo(struct command cmd) {
+    int i = 1;
+    while (cmd.arg_ptrs[i] != 0 && i < MAX_ARGS - 1) {
+        if (cmd.arg_ptrs[i + 1])
+            printf("%s ", cmd.arg_ptrs[i]);
+        else 
+            printf("%s\n", cmd.arg_ptrs[i]);
+        i += 1;
+    }
 }
