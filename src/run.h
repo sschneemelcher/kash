@@ -1,4 +1,4 @@
-int run(struct command cmd, char **env, char** aliases);
+int run(struct command cmd, char **env, char** aliases, int sess);
 void run_cmd(struct command cmd, char **env, char** aliases);
 void run_cd(struct command cmd);
 void echo(struct command cmd);

@@ -30,7 +30,8 @@ cmds=("ls"
     "echo 'hello world'"
     "echo '  \"hello world'"
     "ls | wc -l"
-    'printf "%s\n" "$HOME"')
+    'printf "%s\n" "$HOME"'
+    )
 
 passed=0
 verbosity="$1"

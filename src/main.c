@@ -64,6 +64,27 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   char prompt[MAX_PROMPT] = "";
 
   int history_idx = 0;
+  
+  if (sess == INTERACTIVE) {
+    char kashrc_path[MAX_PATH];
+    sprintf(kashrc_path, "%s/.kashrc", getenv("HOME"));
+    int fp = open(kashrc_path, O_RDONLY);
+    read(fp, input, MAX_INPUT);
+  
+    char *line_ret;
+    for (char *line = strtok_r(input, "\n;", &line_ret); line;
+         line = strtok_r(NULL, "\n;", &line_ret)) {
+      parse_input(line, &cmd);
+      if (run(cmd, env, aliases, sess)) {
+        for (int i = 0; i < 128; i++) {
+          if (aliases[i])
+            free(aliases[i]);
+        }
+        return EXIT_SUCCESS;
+      }
+    }
+  }
+  
   while (1) {
     if (sess == INTERACTIVE) {
       print_prompt(prompt);
@@ -82,7 +103,7 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
     for (char *line = strtok_r(input, "\n;", &line_ret); line;
          line = strtok_r(NULL, "\n;", &line_ret)) {
       parse_input(line, &cmd);
-      if (run(cmd, env, aliases)) {
+      if (run(cmd, env, aliases, sess)) {
         for (int i = 0; i < 128; i++) {
           if (aliases[i])
             free(aliases[i]);
