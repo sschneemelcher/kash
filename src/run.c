@@ -1,4 +1,5 @@
 #include "utils.h"
+
 #include "run.h"
 #include <spawn.h>
 #include <stdio.h>
@@ -7,10 +8,10 @@
 #include <unistd.h>
 #include <string.h>
 
-int run(struct command cmd, char **env) {
+int run(struct command cmd, char **env, char** aliases) {
   switch (cmd.builtin) {
   case NONE:
-    run_cmd(cmd, env);
+    run_cmd(cmd, env, aliases);
     break;
   case CD:
     run_cd(cmd);
@@ -20,14 +21,25 @@ int run(struct command cmd, char **env) {
   case ECHO:
     echo(cmd);
     break;
+  case ALIAS:
+    run_alias(cmd, aliases);
+    break;
   case EMPTY:
     break;
   }
   return 0;
 }
 
-void run_cmd(struct command cmd, char **env) {
-  pid_t pid;
+void run_cmd(struct command cmd, char **env, char** aliases) {
+
+  int hash_value = MOD(hash(cmd.arg_ptrs[0], strlen(cmd.arg_ptrs[0])), 128);
+  
+  if (aliases[hash_value] != 0) {
+    //printf("%s\n",aliases[hash_value]);
+    cmd.arg_ptrs[0] = aliases[hash_value];
+  }
+  
+  pid_t pid; 
   if (!cmd.bg) {
     int result =
         posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
@@ -67,4 +79,11 @@ void echo(struct command cmd) {
             printf("%s\n", cmd.arg_ptrs[i]);
         i += 1;
     }
+}
+
+void run_alias(struct command cmd, char** aliases) {
+  int hash_value = MOD(hash(cmd.arg_ptrs[1], strlen(cmd.arg_ptrs[1])), 128);
+  aliases[hash_value] = malloc(strlen(cmd.arg_ptrs[2])*sizeof(char));
+  memcpy(aliases[hash_value], cmd.arg_ptrs[2], strlen(cmd.arg_ptrs[2])); 
+  //printf("%s\n%s\n", cmd.arg_ptrs[1], aliases[MOD(hash(cmd.arg_ptrs[1], strlen(cmd.arg_ptrs[1])), 128)]);
 }

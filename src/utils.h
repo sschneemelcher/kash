@@ -28,7 +28,7 @@ struct command {
   char argv[MAX_ARGS][MAX_CMD];
   char *arg_ptrs[MAX_CMD];
   int bg;
-  enum builtin_t { NONE, EXIT, CD, EMPTY, ECHO } builtin;
+  enum builtin_t { NONE, EXIT, CD, EMPTY, ECHO, ALIAS } builtin;
 };
 
 int hash(char* string, int length);

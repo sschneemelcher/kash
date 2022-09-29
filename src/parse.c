@@ -71,5 +71,7 @@ void parse_input(char *input, struct command *cmd) {
         cmd->builtin = ECHO;
       }
     }
+  } else if (strcmp(cmd->argv[0], "alias") == 0) {
+    cmd->builtin = ALIAS;
   }
 }
