@@ -102,7 +102,7 @@ int execute_commands(char *input, char **env, char **aliases,
   struct command cmd;
   for (char *line = strtok_r(input, "\n;", &line_ret); line;
        line = strtok_r(NULL, "\n;", &line_ret)) {
-    parse_input(line, &cmd);
+    parse_input(line, &cmd, aliases);
     if (run(cmd, env, aliases, sess)) {
       for (int i = 0; i < MAX_ALIASES; i++) {
         if (aliases[i])

@@ -34,12 +34,6 @@ int run(struct command cmd, char **env, char **aliases, int sess) {
 
 void run_cmd(struct command cmd, char **env, char **aliases) {
 
-  int hash_value = MOD(hash(cmd.arg_ptrs[0], strlen(cmd.arg_ptrs[0])), MAX_ALIASES);
-
-  if (aliases[hash_value] != 0) {
-    cmd.arg_ptrs[0] = aliases[hash_value];
-  }
-
   pid_t pid;
   if (!cmd.bg) {
     int result =

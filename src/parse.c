@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void parse_input(char *input, struct command *cmd) {
+void parse_input(char *input, struct command *cmd, char **aliases) {
 
   if (*input == 0)
     return;
@@ -58,20 +58,27 @@ void parse_input(char *input, struct command *cmd) {
     cmd->arg_ptrs[cmd_idx] = 0;
   }
 
+  int hash_value =
+      MOD(hash(cmd->arg_ptrs[0], strlen(cmd->arg_ptrs[0])), MAX_ALIASES);
+
+  if (aliases[hash_value] != 0) {
+    cmd->arg_ptrs[0] = aliases[hash_value];
+  }
+
   cmd->builtin = NONE;
-  if (strcmp(cmd->argv[0], "cd") == 0) {
+  if (strcmp(cmd->arg_ptrs[0], "cd") == 0) {
     cmd->builtin = CD;
-  } else if (cmd->argv[0][0] == 'e') {
-    if (cmd->argv[0][1] == 'x') {
-      if (strcmp(&(cmd->argv[0][2]), "it") == 0) {
+  } else if (cmd->arg_ptrs[0][0] == 'e') {
+    if (cmd->arg_ptrs[0][1] == 'x') {
+      if (strcmp(&(cmd->arg_ptrs[0][2]), "it") == 0) {
         cmd->builtin = EXIT;
       }
-    } else if (cmd->argv[0][1] == 'c') {
-      if (strcmp(&(cmd->argv[0][2]), "ho") == 0) {
+    } else if (cmd->arg_ptrs[0][1] == 'c') {
+      if (strcmp(&(cmd->arg_ptrs[0][2]), "ho") == 0) {
         cmd->builtin = ECHO;
       }
     }
-  } else if (strcmp(cmd->argv[0], "alias") == 0) {
+  } else if (strcmp(cmd->arg_ptrs[0], "alias") == 0) {
     cmd->builtin = ALIAS;
   }
 }
