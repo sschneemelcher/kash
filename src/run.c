@@ -34,10 +34,9 @@ int run(struct command cmd, char **env, char **aliases, int sess) {
 
 void run_cmd(struct command cmd, char **env, char **aliases) {
 
-  int hash_value = MOD(hash(cmd.arg_ptrs[0], strlen(cmd.arg_ptrs[0])), 128);
+  int hash_value = MOD(hash(cmd.arg_ptrs[0], strlen(cmd.arg_ptrs[0])), MAX_ALIASES);
 
   if (aliases[hash_value] != 0) {
-    // printf("%s\n",aliases[hash_value]);
     cmd.arg_ptrs[0] = aliases[hash_value];
   }
 
@@ -93,10 +92,8 @@ void run_alias(struct command cmd, char **aliases) {
   if (*cmd.arg_ptrs[1] == '=' && (cmd.arg_ptrs[1] + 1) != 0) {
     *cmd.arg_ptrs[1] = 0;
     command = cmd.arg_ptrs[1] + 1;
-    int hash_value = MOD(hash(alias, strlen(alias)), 128);
+    int hash_value = MOD(hash(alias, strlen(alias)), MAX_ALIASES);
     aliases[hash_value] = malloc(strlen(command) * sizeof(char));
     memcpy(aliases[hash_value], command, strlen(command));
   }
-  // printf("%s\n%s\n", cmd.arg_ptrs[1], aliases[MOD(hash(cmd.arg_ptrs[1],
-  // strlen(cmd.arg_ptrs[1])), 128)]);
 }

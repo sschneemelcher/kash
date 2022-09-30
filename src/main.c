@@ -52,10 +52,7 @@ int main(int argc, char **argv, char **envp) {
 }
 
 int shell_loop(char **env, int sess, int input_fd, char *input_str) {
-  char* aliases[128] = {};
-
-
-  struct command cmd;
+  char *aliases[MAX_ALIASES] = {};
   char history[MAX_HISTORY][MAX_INPUT];
   for (int i = 0; i <= MAX_HISTORY; i++) {
     history[i][0] = '\0';
@@ -64,28 +61,17 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   char prompt[MAX_PROMPT] = "";
 
   int history_idx = 0;
-  
+
   if (sess == INTERACTIVE) {
     char kashrc_path[MAX_PATH];
-    sprintf(kashrc_path, "%s/.kashrc", getenv("HOME"));
+    strcpy(kashrc_path, getenv("HOME"));
+    strcpy(kashrc_path+strlen(kashrc_path), "/.kashrc");
     int fp = open(kashrc_path, O_RDONLY);
     read(fp, input, MAX_INPUT);
-  
-    char *line_ret;
-    for (char *line = strtok_r(input, "\n;", &line_ret); line;
-         line = strtok_r(NULL, "\n;", &line_ret)) {
-      parse_input(line, &cmd);
-      if (run(cmd, env, aliases, sess)) {
-        for (int i = 0; i < 128; i++) {
-          if (aliases[i])
-            free(aliases[i]);
-        }
-        return EXIT_SUCCESS;
-      }
-    }
+    execute_commands(input, env, aliases, sess);
   }
-  
-  while (1) {
+
+  do {
     if (sess == INTERACTIVE) {
       print_prompt(prompt);
       handle_keys(input, history, history_idx);
@@ -97,27 +83,33 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
       }
       input[MAX_INPUT - 1] = 0;
     }
+    execute_commands(input, env, aliases, sess);
     strcpy(history[history_idx], input);
     history_idx = (history_idx + 1) % MAX_HISTORY;
-    char *line_ret;
-    for (char *line = strtok_r(input, "\n;", &line_ret); line;
-         line = strtok_r(NULL, "\n;", &line_ret)) {
-      parse_input(line, &cmd);
-      if (run(cmd, env, aliases, sess)) {
-        for (int i = 0; i < 128; i++) {
-          if (aliases[i])
-            free(aliases[i]);
-        }
-        return EXIT_SUCCESS;
-      }
-    }
-    if (sess == NONINTERACTIVE)
-      break;
-  }
+    
+  } while (sess == INTERACTIVE);
 
-  for (int i = 0; i < 128; i++) {
+  for (int i = 0; i < MAX_ALIASES; i++) {
     if (aliases[i] != 0)
       free(aliases[i]);
   }
   return EXIT_SUCCESS;
+}
+
+int execute_commands(char *input, char **env, char **aliases,
+                     int sess) {
+  char *line_ret;
+  struct command cmd;
+  for (char *line = strtok_r(input, "\n;", &line_ret); line;
+       line = strtok_r(NULL, "\n;", &line_ret)) {
+    parse_input(line, &cmd);
+    if (run(cmd, env, aliases, sess)) {
+      for (int i = 0; i < MAX_ALIASES; i++) {
+        if (aliases[i])
+          free(aliases[i]);
+      }
+      exit(EXIT_FAILURE);
+    }
+  }
+  return 0;
 }
