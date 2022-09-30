@@ -1,4 +1,4 @@
-#define MAX_INPUT 256
+#define MAX_INPUT 2048
 #define MAX_PATH 128
 #define MAX_PROMPT 256
 #define MAX_ARGS 16
