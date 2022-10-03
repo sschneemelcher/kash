@@ -1,7 +1,4 @@
-void parse_input(char *input, struct command *cmd, char **aliases);
-void parse_cmd(char *word_ret, struct command *cmd);
-void parse_quote(char *word, char *word_ret, char *buf, char mark);
-void parse_key_value(char *input, char *key, char *value);
+void parse_input(char *, struct command *, char **);
 
 // written as macro because then we can use pointers instead of copying memory
 #define KEY_VALUE(input, key, value)                                           \
