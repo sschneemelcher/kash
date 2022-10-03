@@ -66,6 +66,9 @@ void parse_input(char *input, struct command *cmd, char **aliases) {
   }
 
   cmd->builtin = NONE;
+  //for (int i = 0; i < strlen(cmd->arg_ptrs[0]); i++) {
+  //  printf("\n%c\n", cmd->arg_ptrs[0][i]);
+  //}
   if (strcmp(cmd->arg_ptrs[0], "cd") == 0) {
     cmd->builtin = CD;
   } else if (cmd->arg_ptrs[0][0] == 'e') {

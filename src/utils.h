@@ -29,7 +29,9 @@ struct command {
   char argv[MAX_ARGS][MAX_CMD];
   char *arg_ptrs[MAX_CMD];
   int bg;
+  int pipe;
   enum builtin_t { NONE, EXIT, CD, EMPTY, ECHO, ALIAS } builtin;
 };
 
 int hash(char* string, int length);
+void graceful_exit(char** free, int return_code);

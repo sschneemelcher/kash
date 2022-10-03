@@ -7,11 +7,12 @@ void parse_input(char *, struct command *, char **);
     while (*input != '=' && *input != 0)                                       \
       input += 1;                                                              \
     *input++ = 0;                                                              \
-    if (*input == '\'' || *input == '"' || *input == "`")                      \
-      char quote = *(input);                                                   \
-    value = input + 1;                                                         \
+    char quote = 0;                                                            \
+    if (*input == '\'' || *input == '"' || *input == '`')                      \
+      quote = *(input++);                                                        \
+    value = (input);                                                         \
     while (*input != quote && *input != 0)                                     \
       input += 1;                                                              \
-    if (input == quote)                                                        \
+    if (*input == quote)                                                        \
       *input = 0;                                                              \
   })

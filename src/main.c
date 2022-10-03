@@ -53,6 +53,7 @@ int main(int argc, char **argv, char **envp) {
 
 int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   char *aliases[MAX_ALIASES] = {};
+  int pipes[8][2];
   char history[MAX_HISTORY][MAX_INPUT];
   for (int i = 0; i <= MAX_HISTORY; i++) {
     history[i][0] = '\0';
@@ -68,7 +69,7 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
     strcpy(kashrc_path + strlen(kashrc_path), "/.kashrc");
     int fp = open(kashrc_path, O_RDONLY);
     read(fp, input, MAX_INPUT);
-    execute_commands(input, env, aliases, sess);
+    execute_commands(input, env, aliases, sess, pipes);
   }
 
   do {
@@ -83,7 +84,7 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
       }
       input[MAX_INPUT - 1] = 0;
     }
-    execute_commands(input, env, aliases, sess);
+    execute_commands(input, env, aliases, sess, pipes);
     strcpy(history[history_idx], input);
     history_idx = (history_idx + 1) % MAX_HISTORY;
 
@@ -96,19 +97,32 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   return EXIT_SUCCESS;
 }
 
-int execute_commands(char *input, char **env, char **aliases, int sess) {
-  char *line_ret;
-  struct command cmd;
-  for (char *line = strtok_r(input, "\n;", &line_ret); line;
-       line = strtok_r(NULL, "\n;", &line_ret)) {
-    parse_input(line, &cmd, aliases);
-    if (run(cmd, env, aliases, sess)) {
-      for (int i = 0; i < MAX_ALIASES; i++) {
-        if (aliases[i])
-          free(aliases[i]);
-      }
-      exit(EXIT_FAILURE);
+int execute_commands(char *input, char **env, char **aliases, int sess,
+                     int pipes[8][2]) {
+  char *current;
+  int end_flag = 0;
+  while (*input != 0) {
+    current = input;
+    struct command cmd;
+    while (*input != 0 && *input != '\n' && *input != ';' && *input != '|') {
+      input += 1;
+    }
+
+    if (*input == 0) {
+      end_flag = 1;
+    } else if (*input == '|') {
+      cmd.pipe = 1;
+    }
+    *input = 0;
+    parse_input(current, &cmd, aliases);
+    if (run(cmd, env, aliases, sess, pipes)) {
+      graceful_exit(aliases, EXIT_SUCCESS);
+    }
+      //graceful_exit(aliases, EXIT_SUCCESS);
+    if (end_flag == 0) {
+      input += 1;
     }
   }
+  memset(input, 0, MAX_INPUT);
   return 0;
 }

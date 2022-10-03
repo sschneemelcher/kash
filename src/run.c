@@ -9,7 +9,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int run(struct command cmd, char **env, char **aliases, int sess) {
+int run(struct command cmd, char **env, char **aliases, int sess, int pipes[8][2]) {
   switch (cmd.builtin) {
   case NONE:
     run_cmd(cmd, env, aliases);
@@ -35,6 +35,28 @@ int run(struct command cmd, char **env, char **aliases, int sess) {
 
 void run_cmd(struct command cmd, char **env, char **aliases) {
 
+  // fork and exec
+  const int pid = fork();
+  if (pid != 0) {
+    int result = 0;
+    waitpid(pid, &result, 0);
+    switch (result) {
+    case 0:
+      break;
+    case 256:
+      printf("-kash: %s: command not found\n", cmd.arg_ptrs[0]);
+      break;
+    default:
+      printf("-kash: %s\n", strerror(result));
+    }
+    if (result != 0) {
+    }
+  } else {
+    execvp(cmd.arg_ptrs[0], cmd.arg_ptrs);
+    exit(EXIT_FAILURE);
+  }
+
+  /*
   pid_t pid;
   if (!cmd.bg) {
     int result =
@@ -52,6 +74,7 @@ void run_cmd(struct command cmd, char **env, char **aliases) {
   } else {
     posix_spawnp(&pid, cmd.arg_ptrs[0], NULL, NULL, cmd.arg_ptrs, env);
   }
+  */
 }
 
 void run_cd(struct command cmd) {
