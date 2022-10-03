@@ -9,10 +9,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int run(struct command cmd, char **env, char **aliases, int sess, int pipes[8][2]) {
+int run(struct command cmd, char **env, char **aliases, int sess,
+        int pipes[8][2]) {
   switch (cmd.builtin) {
   case NONE:
-    run_cmd(cmd, env, aliases);
+    run_cmd(cmd, env, aliases, pipes);
     break;
   case CD:
     run_cd(cmd);
@@ -33,11 +34,19 @@ int run(struct command cmd, char **env, char **aliases, int sess, int pipes[8][2
   return 0;
 }
 
-void run_cmd(struct command cmd, char **env, char **aliases) {
+void run_cmd(struct command cmd, char **env, char **aliases, int pipes[8][2]) {
+
+  if (cmd.pipe == 1) {
+    pipe(pipes[0]);
+  }
 
   // fork and exec
   const int pid = fork();
   if (pid != 0) {
+    if (cmd.pipe == 2) {
+      close(pipes[0][0]);
+      close(pipes[0][1]);
+    }
     int result = 0;
     waitpid(pid, &result, 0);
     switch (result) {
@@ -52,6 +61,13 @@ void run_cmd(struct command cmd, char **env, char **aliases) {
     if (result != 0) {
     }
   } else {
+    if (cmd.pipe == 1) {
+      close(pipes[0][0]);
+      dup2(pipes[0][1], 1);
+    } else if (cmd.pipe == 2) {
+      dup2(pipes[0][0], 0);
+      close(pipes[0][1]);
+    }
     execvp(cmd.arg_ptrs[0], cmd.arg_ptrs);
     exit(EXIT_FAILURE);
   }

@@ -101,6 +101,7 @@ int execute_commands(char *input, char **env, char **aliases, int sess,
                      int pipes[8][2]) {
   char *current;
   int end_flag = 0;
+  int pipe_flag = 0;
   while (*input != 0) {
     current = input;
     struct command cmd;
@@ -108,17 +109,24 @@ int execute_commands(char *input, char **env, char **aliases, int sess,
       input += 1;
     }
 
+    if (pipe_flag) {
+      cmd.pipe = 2;
+      pipe_flag = 0;
+    }
+
     if (*input == 0) {
       end_flag = 1;
     } else if (*input == '|') {
       cmd.pipe = 1;
+      cmd.bg = 1;
+      pipe_flag = 1;
     }
     *input = 0;
     parse_input(current, &cmd, aliases);
     if (run(cmd, env, aliases, sess, pipes)) {
       graceful_exit(aliases, EXIT_SUCCESS);
     }
-      //graceful_exit(aliases, EXIT_SUCCESS);
+    
     if (end_flag == 0) {
       input += 1;
     }
