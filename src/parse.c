@@ -82,3 +82,16 @@ void parse_input(char *input, struct command *cmd, char **aliases) {
     cmd->builtin = ALIAS;
   }
 }
+
+
+void parse_key_value(char *input, char *key, char *value) {
+  char *start = input;
+  while (*input != 0 && *input != '=') {
+    input += 1;
+  }
+  if (*input == '=' && (input + 1) != 0) {
+    *input = 0;
+    strcpy(key, start);
+    strcpy(value, input+1);
+  }
+}

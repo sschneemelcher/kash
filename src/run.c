@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include "parse.h"
 #include "run.h"
 #include <spawn.h>
 #include <stdio.h>
@@ -79,13 +80,10 @@ void echo(struct command cmd) {
 }
 
 void run_alias(struct command cmd, char **aliases) {
-  char *command, *alias = cmd.arg_ptrs[1];
-  while (*cmd.arg_ptrs[1] != 0 && *cmd.arg_ptrs[1] != '=') {
-    cmd.arg_ptrs[1] += 1;
-  }
-  if (*cmd.arg_ptrs[1] == '=' && (cmd.arg_ptrs[1] + 1) != 0) {
-    *cmd.arg_ptrs[1] = 0;
-    command = cmd.arg_ptrs[1] + 1;
+  char *command, *alias;
+  KEY_VALUE(cmd.arg_ptrs[1], alias, command);
+
+  if (*command != 0 && *alias != 0) {
     int hash_value = MOD(hash(alias, strlen(alias)), MAX_ALIASES);
     aliases[hash_value] = malloc(strlen(command) * sizeof(char));
     memcpy(aliases[hash_value], command, strlen(command));

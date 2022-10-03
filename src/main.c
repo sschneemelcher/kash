@@ -65,7 +65,7 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   if (sess == INTERACTIVE) {
     char kashrc_path[MAX_PATH];
     strcpy(kashrc_path, getenv("HOME"));
-    strcpy(kashrc_path+strlen(kashrc_path), "/.kashrc");
+    strcpy(kashrc_path + strlen(kashrc_path), "/.kashrc");
     int fp = open(kashrc_path, O_RDONLY);
     read(fp, input, MAX_INPUT);
     execute_commands(input, env, aliases, sess);
@@ -86,7 +86,7 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
     execute_commands(input, env, aliases, sess);
     strcpy(history[history_idx], input);
     history_idx = (history_idx + 1) % MAX_HISTORY;
-    
+
   } while (sess == INTERACTIVE);
 
   for (int i = 0; i < MAX_ALIASES; i++) {
@@ -96,8 +96,7 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   return EXIT_SUCCESS;
 }
 
-int execute_commands(char *input, char **env, char **aliases,
-                     int sess) {
+int execute_commands(char *input, char **env, char **aliases, int sess) {
   char *line_ret;
   struct command cmd;
   for (char *line = strtok_r(input, "\n;", &line_ret); line;
