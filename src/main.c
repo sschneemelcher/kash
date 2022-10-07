@@ -84,9 +84,10 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
       }
       input[MAX_INPUT - 1] = 0;
     }
-    execute_commands(input, env, aliases, sess, pipes);
-    strcpy(history[history_idx], input);
-    history_idx = (history_idx + 1) % MAX_HISTORY;
+    if (!execute_commands(input, env, aliases, sess, pipes)) {
+      strcpy(history[history_idx], input);
+      history_idx = (history_idx + 1) % MAX_HISTORY;
+    }
 
   } while (sess == INTERACTIVE);
 
@@ -99,6 +100,9 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
 
 int execute_commands(char *input, char **env, char **aliases, int sess,
                      int pipes[8][2]) {
+
+  if (*input == 0)
+    return 1;
   char *current;
   int end_flag = 0;
   int pipe_flag = 0;
@@ -126,7 +130,7 @@ int execute_commands(char *input, char **env, char **aliases, int sess,
     if (run(cmd, env, aliases, sess, pipes)) {
       graceful_exit(aliases, EXIT_SUCCESS);
     }
-    
+
     if (end_flag == 0) {
       input += 1;
     }
