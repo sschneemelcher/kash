@@ -1,4 +1,4 @@
-void parse_input(char *, struct command *, char **);
+void parse_input(char *, struct command *, char *[MAX_ALIASES][2]);
 
 // written as macro because then we can use pointers instead of copying memory
 #define KEY_VALUE(input, key, value)                                           \

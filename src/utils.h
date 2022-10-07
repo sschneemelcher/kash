@@ -34,4 +34,4 @@ struct command {
 };
 
 int hash(char* string, int length);
-void graceful_exit(char** free, int return_code);
+void graceful_exit(char* free[MAX_ALIASES][2], int return_code);

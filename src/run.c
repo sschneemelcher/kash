@@ -9,7 +9,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int run(struct command cmd, char **env, char **aliases, int sess,
+int run(struct command cmd, char **env, char *aliases[MAX_ALIASES][2], int sess,
         int pipes[8][2]) {
   switch (cmd.builtin) {
   case NONE:
@@ -34,7 +34,7 @@ int run(struct command cmd, char **env, char **aliases, int sess,
   return 0;
 }
 
-void run_cmd(struct command cmd, char **env, char **aliases, int pipes[8][2]) {
+void run_cmd(struct command cmd, char **env, char *aliases[MAX_ALIASES][2], int pipes[8][2]) {
 
   if (cmd.pipe == 1) {
     pipe(pipes[0]);
@@ -118,13 +118,15 @@ void echo(struct command cmd) {
   }
 }
 
-void run_alias(struct command cmd, char **aliases) {
+void run_alias(struct command cmd, char *aliases[MAX_ALIASES][2]) {
   char *command, *alias;
   KEY_VALUE(cmd.arg_ptrs[1], alias, command);
 
   if (*command != 0 && *alias != 0) {
     int hash_value = MOD(hash(alias, strlen(alias)), MAX_ALIASES);
-    aliases[hash_value] = malloc(strlen(command) * sizeof(char));
-    memcpy(aliases[hash_value], command, strlen(command));
+    aliases[hash_value][0] = malloc(strlen(alias) * sizeof(char));
+    aliases[hash_value][1] = malloc(strlen(command) * sizeof(char));
+    memcpy(aliases[hash_value][0], alias, strlen(alias));
+    memcpy(aliases[hash_value][1], command, strlen(command));
   }
 }

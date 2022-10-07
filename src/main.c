@@ -45,14 +45,14 @@ int main(int argc, char **argv, char **envp) {
         shell_loop(envp, NONINTERACTIVE, fp, NULL);
         close(fp);
       }
-      i++;
+      i += 1;
     }
     return 0;
   }
 }
 
 int shell_loop(char **env, int sess, int input_fd, char *input_str) {
-  char *aliases[MAX_ALIASES] = {};
+  char *aliases[MAX_ALIASES][2] = {};
   int pipes[8][2];
   char history[MAX_HISTORY][MAX_INPUT];
   for (int i = 0; i <= MAX_HISTORY; i++) {
@@ -92,13 +92,15 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   } while (sess == INTERACTIVE);
 
   for (int i = 0; i < MAX_ALIASES; i++) {
-    if (aliases[i] != 0)
-      free(aliases[i]);
+    if (*aliases[i]) {
+      free(aliases[i][0]);
+      free(aliases[i][1]);
+    }
   }
   return EXIT_SUCCESS;
 }
 
-int execute_commands(char *input, char **env, char **aliases, int sess,
+int execute_commands(char *input, char **env, char *aliases[MAX_ALIASES][2], int sess,
                      int pipes[8][2]) {
 
   if (*input == 0)

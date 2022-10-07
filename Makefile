@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS  = -Wall -pedantic -g -Ofast -Wno-gnu-statement-expression
+CFLAGS  = -Wall -pedantic -g -Ofast -Wno-gnu-statement-expression -Wgnu-empty-initializer
 OBJ = main.o keys.o prompt.o run.o parse.o utils.o
 VERBOSITY = 0
 

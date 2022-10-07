@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void parse_input(char *input, struct command *cmd, char **aliases) {
+void parse_input(char *input, struct command *cmd, char *aliases[MAX_ALIASES][2]) {
 
   if (*input == 0)
     return;
@@ -61,14 +61,12 @@ void parse_input(char *input, struct command *cmd, char **aliases) {
   int hash_value =
       MOD(hash(cmd->arg_ptrs[0], strlen(cmd->arg_ptrs[0])), MAX_ALIASES);
 
-  if (aliases[hash_value] != 0) {
-    cmd->arg_ptrs[0] = aliases[hash_value];
+  if (*aliases[hash_value] &&
+      strcmp(aliases[hash_value][0], cmd->arg_ptrs[0]) == 0) {
+    cmd->arg_ptrs[0] = aliases[hash_value][1];
   }
 
   cmd->builtin = NONE;
-  //for (int i = 0; i < strlen(cmd->arg_ptrs[0]); i++) {
-  //  printf("\n%c\n", cmd->arg_ptrs[0][i]);
-  //}
   if (strcmp(cmd->arg_ptrs[0], "cd") == 0) {
     cmd->builtin = CD;
   } else if (cmd->arg_ptrs[0][0] == 'e') {

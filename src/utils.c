@@ -63,10 +63,12 @@ int hash(char *string, int length) {
   return hash_val;
 }
 
-void graceful_exit(char **aliases, int return_code) {
+void graceful_exit(char *aliases[MAX_ALIASES][2], int return_code) {
   for (int i = 0; i < MAX_ALIASES; i++) {
-    if (aliases[i])
-      free(aliases[i]);
+    if (*aliases[i]) {
+      free(aliases[i][0]);
+      free(aliases[i][1]);
+    }
   }
   exit(return_code);
 }
