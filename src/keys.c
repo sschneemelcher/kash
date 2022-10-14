@@ -24,41 +24,42 @@ int get_completion(char *line, char *comp) {
   return strlen(comp);
 }
 
-void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT], int history_idx) {
+void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
+                 int history_idx) {
+  int original_history_idx = history_idx;
   int key = 0;
   int end = 0;
   int index = 0;
   input[0] = 0;
   while (end < MAX_INPUT) {
     switch (key = getch()) {
-    case 27: // Arrow Keys emit 27 and 91
-      switch (arrow(index, end)) {
-      case 1:
-        index += 1;
-        break;
-      case -1:
-        index -= 1;
-        break;
-      case 2:
-        history_idx = MOD(history_idx - 1, MAX_HISTORY);
+    case 27: { // Arrow Keys emit 27 and 91
+      getch(); // we dont need the 91
+      key = getch();
+      if (key > 'B') {
+        if (key == 'C' && index < end) { // Right
+          index += 1;
+          printf("\033[%c", key);
+        } else if (key == 'D' && index > 0) { // Left
+          index -= 1;
+          printf("\033[%c", key);
+        }
+      } else if (key <= 'B') {
+        strcpy(history[history_idx], input);
+        if (key == 'A') { // Up
+          history_idx = MOD(history_idx - 1, MAX_HISTORY);
+        } else if (key == 'B') { // Down
+          history_idx = MOD(history_idx + 1, MAX_HISTORY);
+        }
         strcpy(input, history[history_idx]);
-        if (index > 0)
-            printf("\033[%iD",index);
+        if (index > 0) {
+          printf("\033[%iD", index);
+        }
         printf("\033[0K%s", input);
         index = strlen(input);
         end = index;
-        break;
-      case -2:
-       history_idx = MOD(history_idx + 1, MAX_HISTORY) ;
-        strcpy(input, history[history_idx]);
-        if (index > 0)
-            printf("\033[%iD",index);
-        printf("\033[0K%s", input);
-        index = strlen(input);
-        end = index;
-        break;
       }
-      break;
+    }
     case '\t': {
       if (index == end) {
         char comp[MAX_CMD];
@@ -76,6 +77,9 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT], int history_
     case '\n':
     case 4: // eot
       input[end] = '\0';
+      if (*input != '\0') {
+          strcpy(history[original_history_idx], input);
+      }
       printf("\n");
       return;
     case 8:   // backspace
@@ -99,29 +103,4 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT], int history_
       break;
     }
   }
-}
-
-int arrow(int index, int end) {
-  getch(); // we dont need the 91
-  switch (getch()) {
-  case 'A': // Up
-    return 2;
-    break;
-  case 'B': // Down
-    return -2;
-    break;
-  case 'C': // Right
-    if (index < end) {
-      printf("\033[C");
-      return 1;
-    }
-    break;
-  case 'D': // Left
-    if (index > 0) {
-      printf("\033[D");
-      return -1;
-    }
-    break;
-  }
-  return 0;
 }
