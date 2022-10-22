@@ -16,6 +16,8 @@ Features:
 + limited non persistent history
 + .kashrc file
 + alias builtin for single commands
++ singular pipes
++ completion for items in current directory
 
 
 The goal is to implement most of the POSIX standard and be the fastest shell to
