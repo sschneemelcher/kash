@@ -1,6 +1,7 @@
 #include "utils.h"
 
 #include "keys.h"
+#include <dirent.h>
 #include <stdio.h>
 #include <string.h>
 #include <termios.h>
@@ -19,8 +20,29 @@ int getch() {
 }
 
 /* TODO should return a completion based on input */
-int get_completion(char *line, char *comp) {
-  comp[0] = '\0';
+int get_completion(char *word, char comp[MAX_CMD]) {
+  comp[0] = 0;
+  char comps[MAX_COMPS][MAX_CMD];
+  DIR *dir;
+  char cwd[MAX_CMD];
+  int len = 0;
+  while ((word + len) && *(word + len) != '\0' && *(word + len) != ' ') {
+    len += 1;
+  }
+  getcwd(cwd, MAX_CMD);
+  if ((dir = opendir(cwd))) {
+    struct dirent *ent = readdir(dir);
+    for (int i = 0; i < MAX_COMPS && ent; i++) {
+      memcpy(comps[i], ent->d_name, MAX_CMD);
+      ent = readdir(dir);
+    }
+  };
+  for (int i = 0; i < MAX_COMPS; i++) {
+    if (comps[i] && memcmp(comps[i], word, len) == 0) {
+      strcpy(comp, (comps[i] + len));
+    }
+  }
+
   return strlen(comp);
 }
 
@@ -63,7 +85,14 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
     case '\t': {
       if (index == end) {
         char comp[MAX_CMD];
-        int len = get_completion(input, comp);
+        char *last_word_start = (input + index);
+
+        for (int i = index;
+             i > 0 && (last_word_start - 1) && *(last_word_start - 1) != ' ';
+             i--) {
+          last_word_start -= 1;
+        }
+        int len = get_completion(last_word_start, comp);
         if ((len + end) < MAX_INPUT) {
           index = end + len;
         } else {
@@ -78,7 +107,7 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
     case 4: // eot
       input[end] = '\0';
       if (*input != '\0') {
-          strcpy(history[original_history_idx], input);
+        strcpy(history[original_history_idx], input);
       }
       printf("\n");
       return;

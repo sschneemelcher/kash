@@ -3,8 +3,9 @@
 #define MAX_PROMPT 256
 #define MAX_ARGS 16
 #define MAX_CMD 32
-#define MAX_HISTORY 10
+#define MAX_HISTORY 32
 #define MAX_ALIASES 32
+#define MAX_COMPS 32
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
