@@ -53,8 +53,8 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   char *aliases[MAX_ALIASES][2] = {};
   int pipes[8][2];
   char history[MAX_HISTORY][MAX_INPUT];
-  for (int i = 0; i <= MAX_HISTORY; i++) {
-    history[i][0] = '\0';
+  for (int i = 0; i < MAX_HISTORY; i++) {
+    history[i][0] = 0;
   }
   char input[MAX_INPUT] = "";
   char prompt[MAX_PROMPT] = "";

@@ -48,6 +48,7 @@ int get_completion(char *word, char comp[MAX_CMD]) {
 
 void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
                  int history_idx) {
+
   int original_history_idx = history_idx;
   int key = 0;
   int end = 0;
@@ -82,8 +83,9 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
         end = index;
       }
     }
+    break;
     case '\t': {
-      if (index == end) {
+      if (index == end && index != 0) {
         char comp[MAX_CMD];
         char *last_word_start = (input + index);
 
