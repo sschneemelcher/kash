@@ -84,10 +84,10 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
         index = strlen(input);
         end = index;
       }
-    }
-    break;
+    } break;
     case '\t': {
-      if (index == end && index != 0) {
+      if (index == end && index != 0 && *(input + index - 1) != 0 &&
+          *(input + index - 1) != ' ') {
         char comp[MAX_CMD];
         char *last_word_start = (input + index);
 
