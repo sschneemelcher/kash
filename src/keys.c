@@ -18,33 +18,29 @@ struct termios enter_raw_mode() {
   return buffered_mode;
 }
 
-void exit_raw_mode(struct termios buffered_mode) {
-  tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
-}
-
-/* TODO should return a completion based on input */
 int get_completion(char *word, char comp[MAX_CMD]) {
-  if (*word == ' ' || *word == 0)
-    return 0;
-
   comp[0] = 0;
   char comps[MAX_COMPS][MAX_CMD];
   DIR *dir;
-  char cwd[MAX_CMD];
+  char path[MAX_PATH + 2] = {'.', '/', 0};
   int len = 0;
   while ((word + len) && *(word + len) != '\0' && *(word + len) != ' ') {
     len += 1;
   }
 
-  getcwd(cwd, MAX_CMD);
-  if ((dir = opendir(cwd))) {
+  if (*(word + len - 1) == '/') {
+    for (int i = 0; i < MAX_PATH && i <= len; i++) {
+      path[i + 2] = word[i];
+    }
+  }
+  if ((dir = opendir(path))) {
     struct dirent *ent = readdir(dir);
     int i = 0;
     while (i < MAX_COMPS && ent) {
-      if (memcmp(ent->d_name, word, len) == 0) {
+      if (memcmp(ent->d_name, word, len) == 0 || *word == 0 || *word == ' ') {
         if (ent->d_namlen > MAX_CMD - 1)
           continue;
-        memcpy(comps[i], ent->d_name, ent->d_namlen);
+        strncpy(comps[i], ent->d_name, MAX_CMD);
         struct stat st;
         fstatat(dirfd(dir), ent->d_name, &st, 0);
         if (S_ISDIR(st.st_mode)) {
@@ -59,11 +55,20 @@ int get_completion(char *word, char comp[MAX_CMD]) {
 
     if (i > 1) {
       printf("\n\033[s\r");
+      int r = 0;
       while (i > 0) {
+        if (MOD(i, 20) == 0) {
+          printf("\033[u\033[%iA", r);
+          r += 1;
+          for (int i = 0; i < r; i++) {
+            printf("\n");
+          }
+          printf("\033[s\r");
+        }
         printf("%s ", comps[i - 1]);
         i -= 1;
       }
-      printf("\033[u\033[A");
+      printf("\033[u\033[%iA", r);
     } else if (i == 1) {
       strcpy(comp, (comps[0] + len));
     }
@@ -111,8 +116,7 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
       }
     } break;
     case '\t': {
-      if (index == end && index != 0 && *(input + index - 1) != 0 &&
-          *(input + index - 1) != ' ') {
+      if (index == end) {
         char comp[MAX_CMD];
         char *last_word_start = (input + index);
 
@@ -140,8 +144,8 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
       if (*input != '\0') {
         strcpy(history[original_history_idx], input);
       }
-      printf("\r\n");
-      exit_raw_mode(buffered_mode);
+      printf("\r\n\033[0J");
+      tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
       return;
     case 8:   // backspace
     case 127: // delete
@@ -164,5 +168,5 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
       break;
     }
   }
-  exit_raw_mode(buffered_mode);
+  tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
 }
