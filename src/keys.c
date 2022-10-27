@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -41,7 +42,16 @@ int get_completion(char *word, char comp[MAX_CMD]) {
     int i = 0;
     while (i < MAX_COMPS && ent) {
       if (memcmp(ent->d_name, word, len) == 0) {
-        memcpy(comps[i], ent->d_name, MAX_CMD);
+        if (ent->d_namlen > MAX_CMD - 1)
+          continue;
+        memcpy(comps[i], ent->d_name, ent->d_namlen);
+        struct stat st;
+        fstatat(dirfd(dir), ent->d_name, &st, 0);
+        if (S_ISDIR(st.st_mode)) {
+          comps[i][ent->d_namlen] = '/';
+          comps[i][ent->d_namlen + 1] = 0;
+        }
+
         i += 1;
       }
       ent = readdir(dir);
@@ -55,7 +65,7 @@ int get_completion(char *word, char comp[MAX_CMD]) {
       }
       printf("\033[u\033[A");
     } else if (i == 1) {
-      strcpy(comp, (comps[0] + len) );
+      strcpy(comp, (comps[0] + len));
     }
   }
 
@@ -73,7 +83,7 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
   struct termios buffered_mode = enter_raw_mode();
   while (end < MAX_INPUT) {
     switch (key = getchar()) {
-    case 27: { // Arrow Keys emit 27 and 91
+    case 27: {   // Arrow Keys emit 27 and 91
       getchar(); // we dont need the 91
       key = getchar();
       if (key > 'B') {
