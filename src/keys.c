@@ -21,6 +21,8 @@ int getch() {
 
 /* TODO should return a completion based on input */
 int get_completion(char *word, char comp[MAX_CMD]) {
+  if (*word == ' ' || *word == 0)
+    return 0;
   comp[0] = 0;
   char comps[MAX_COMPS][MAX_CMD];
   DIR *dir;
