@@ -7,17 +7,32 @@
 #include <termios.h>
 #include <unistd.h>
 
-int getch() {
+struct termios enter_raw_mode() {
   struct termios raw_mode, buffered_mode;
-  int ch;
   tcgetattr(STDIN_FILENO, &buffered_mode);
   memcpy(&raw_mode, &buffered_mode, sizeof(struct termios));
+  raw_mode.c_oflag &= ~(OPOST);
   raw_mode.c_lflag &= ~(ICANON | ECHO);
   tcsetattr(STDIN_FILENO, TCSANOW, &raw_mode);
-  ch = getchar();
-  tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
-  return ch;
+  return buffered_mode;
 }
+
+void exit_raw_mode(struct termios buffered_mode) {
+  tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
+}
+
+// int getch() {
+//   struct termios raw_mode, buffered_mode;
+//   int ch;
+//   tcgetattr(STDIN_FILENO, &buffered_mode);
+//   memcpy(&raw_mode, &buffered_mode, sizeof(struct termios));
+//   raw_mode.c_oflag &= ~(OPOST);
+//   raw_mode.c_lflag &= ~(ICANON | ECHO);
+//   tcsetattr(STDIN_FILENO, TCSANOW, &raw_mode);
+//   ch = getchar();
+//   tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
+//   return ch;
+// }
 
 /* TODO should return a completion based on input */
 int get_completion(char *word, char comp[MAX_CMD]) {
@@ -34,17 +49,25 @@ int get_completion(char *word, char comp[MAX_CMD]) {
   getcwd(cwd, MAX_CMD);
   if ((dir = opendir(cwd))) {
     struct dirent *ent = readdir(dir);
-    for (int i = 0; i < MAX_COMPS && ent; i++) {
-      memcpy(comps[i], ent->d_name, MAX_CMD);
+    int i = 0;
+    while (i < MAX_COMPS && ent) {
+      if (memcmp(ent->d_name, word, len) == 0) {
+        memcpy(comps[i], ent->d_name, MAX_CMD);
+        i += 1;
+      }
       ent = readdir(dir);
     }
-  };
-  for (int i = 0; i < MAX_COMPS; i++) {
-    if (comps[i] && memcmp(comps[i], word, len) == 0) {
-      strcpy(comp, (comps[i] + len));
+    if (i > 1) {
+      printf("\n\033[s\r");
+      while (i > 1) {
+        printf("%s ", comps[i - 1]);
+        i -= 1;
+      }
+      printf("\033[u\033[A");
+    } else if (i == 1) {
+      strcpy(comp, (comps[0] + len) );
     }
   }
-
   return strlen(comp);
 }
 
@@ -56,11 +79,12 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
   int end = 0;
   int index = 0;
   input[0] = 0;
+  struct termios buffered_mode = enter_raw_mode();
   while (end < MAX_INPUT) {
-    switch (key = getch()) {
+    switch (key = getchar()) {
     case 27: { // Arrow Keys emit 27 and 91
-      getch(); // we dont need the 91
-      key = getch();
+      getchar(); // we dont need the 91
+      key = getchar();
       if (key > 'B') {
         if (key == 'C' && index < end) { // Right
           index += 1;
@@ -96,15 +120,17 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
              i--) {
           last_word_start -= 1;
         }
-        int len = get_completion(last_word_start, comp);
-        if ((len + end) < MAX_INPUT) {
-          index = end + len;
-        } else {
-          index = MAX_INPUT - end;
+        int len = 0;
+        if ((len = get_completion(last_word_start, comp))) {
+          if ((len + end) < MAX_INPUT) {
+            index = end + len;
+          } else {
+            index = MAX_INPUT - end;
+          }
+          memcpy((input + end), comp, index);
+          end = index;
+          printf("%.*s", index, comp);
         }
-        memcpy((input + end), comp, index);
-        end = index;
-        printf("%.*s", index, comp);
       }
     } break;
     case '\n':
@@ -113,7 +139,8 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
       if (*input != '\0') {
         strcpy(history[original_history_idx], input);
       }
-      printf("\n");
+      printf("\r\n");
+      exit_raw_mode(buffered_mode);
       return;
     case 8:   // backspace
     case 127: // delete
@@ -136,4 +163,5 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
       break;
     }
   }
+  exit_raw_mode(buffered_mode);
 }

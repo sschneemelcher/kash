@@ -14,6 +14,8 @@
 
 int main(int argc, char **argv, char **envp) {
   signal(SIGINT, intHandler);
+  
+  
   int opt;
   char inp[MAX_INPUT] = {0};
   enum session_t tsession = INTERACTIVE;
