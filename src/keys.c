@@ -21,23 +21,11 @@ void exit_raw_mode(struct termios buffered_mode) {
   tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
 }
 
-// int getch() {
-//   struct termios raw_mode, buffered_mode;
-//   int ch;
-//   tcgetattr(STDIN_FILENO, &buffered_mode);
-//   memcpy(&raw_mode, &buffered_mode, sizeof(struct termios));
-//   raw_mode.c_oflag &= ~(OPOST);
-//   raw_mode.c_lflag &= ~(ICANON | ECHO);
-//   tcsetattr(STDIN_FILENO, TCSANOW, &raw_mode);
-//   ch = getchar();
-//   tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
-//   return ch;
-// }
-
 /* TODO should return a completion based on input */
 int get_completion(char *word, char comp[MAX_CMD]) {
   if (*word == ' ' || *word == 0)
     return 0;
+
   comp[0] = 0;
   char comps[MAX_COMPS][MAX_CMD];
   DIR *dir;
@@ -46,6 +34,7 @@ int get_completion(char *word, char comp[MAX_CMD]) {
   while ((word + len) && *(word + len) != '\0' && *(word + len) != ' ') {
     len += 1;
   }
+
   getcwd(cwd, MAX_CMD);
   if ((dir = opendir(cwd))) {
     struct dirent *ent = readdir(dir);
@@ -57,9 +46,10 @@ int get_completion(char *word, char comp[MAX_CMD]) {
       }
       ent = readdir(dir);
     }
+
     if (i > 1) {
       printf("\n\033[s\r");
-      while (i > 1) {
+      while (i > 0) {
         printf("%s ", comps[i - 1]);
         i -= 1;
       }
@@ -68,6 +58,7 @@ int get_completion(char *word, char comp[MAX_CMD]) {
       strcpy(comp, (comps[0] + len) );
     }
   }
+
   return strlen(comp);
 }
 
