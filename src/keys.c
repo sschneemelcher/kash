@@ -8,36 +8,33 @@
 #include <termios.h>
 #include <unistd.h>
 
-struct termios enter_raw_mode() {
-  struct termios raw_mode, buffered_mode;
-  tcgetattr(STDIN_FILENO, &buffered_mode);
-  memcpy(&raw_mode, &buffered_mode, sizeof(struct termios));
-  raw_mode.c_oflag &= ~(OPOST);
-  raw_mode.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &raw_mode);
-  return buffered_mode;
-}
-
 int get_completion(char *word, char comp[MAX_CMD]) {
   comp[0] = 0;
   char comps[MAX_COMPS][MAX_CMD];
   DIR *dir;
   char path[MAX_PATH + 2] = {'.', '/', 0};
   int len = 0;
+  char *subdirs_end = word;
   while ((word + len) && *(word + len) != '\0' && *(word + len) != ' ') {
     len += 1;
-  }
-
-  if (*(word + len - 1) == '/') {
-    for (int i = 0; i < MAX_PATH && i <= len; i++) {
-      path[i + 2] = word[i];
+    if (*(word + len) == '/') {
+      subdirs_end = word + len + 1;
     }
   }
+
+  if (subdirs_end != word) {
+    for (int i = 0; i < MAX_PATH && i <= len && (word + i) < subdirs_end; i++) {
+      path[i + 2] = word[i];
+      path[i + 3] = 0;
+    }
+  }
+
   if ((dir = opendir(path))) {
     struct dirent *ent = readdir(dir);
     int i = 0;
     while (i < MAX_COMPS && ent) {
-      if (memcmp(ent->d_name, word, len) == 0 || *word == 0 || *word == ' ') {
+      if (memcmp(ent->d_name, subdirs_end, len - (subdirs_end - word)) == 0 ||
+          *subdirs_end == 0 || *subdirs_end == ' ') {
         if (ent->d_namlen > MAX_CMD - 1)
           continue;
         strncpy(comps[i], ent->d_name, MAX_CMD);
@@ -70,7 +67,7 @@ int get_completion(char *word, char comp[MAX_CMD]) {
       }
       printf("\033[u\033[%iA", r);
     } else if (i == 1) {
-      strcpy(comp, (comps[0] + len));
+      strcpy(comp, (comps[0] + len - (subdirs_end - word)));
     }
   }
 
@@ -80,16 +77,25 @@ int get_completion(char *word, char comp[MAX_CMD]) {
 void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
                  int history_idx) {
 
+  // sets the terminal into raw mode and saves the settings of
+  // the current mode (probably buffered) in buffered_mode
+  struct termios raw_mode, buffered_mode;
+  tcgetattr(STDIN_FILENO, &buffered_mode);
+  memcpy(&raw_mode, &buffered_mode, sizeof(struct termios));
+  raw_mode.c_oflag &= ~(OPOST);
+  raw_mode.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &raw_mode);
+
   int original_history_idx = history_idx;
   int key = 0;
   int end = 0;
   int index = 0;
   input[0] = 0;
-  struct termios buffered_mode = enter_raw_mode();
   while (end < MAX_INPUT) {
-    switch (key = getchar()) {
-    case 27: {   // Arrow Keys emit 27 and 91
-      getchar(); // we dont need the 91
+    key = getchar();
+
+    if (key == 27) { // Arrow Keys emit 27 and 91
+      getchar();     // we dont need the 91
       key = getchar();
       if (key > 'B') {
         if (key == 'C' && index < end) { // Right
@@ -114,8 +120,7 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
         index = strlen(input);
         end = index;
       }
-    } break;
-    case '\t': {
+    } else if (key == '\t') {
       if (index == end) {
         char comp[MAX_CMD];
         char *last_word_start = (input + index);
@@ -137,9 +142,7 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
           printf("%.*s", index, comp);
         }
       }
-    } break;
-    case '\n':
-    case 4: // eot
+    } else if (key == '\n' || key == 4) { // 4 is the EOT code
       input[end] = '\0';
       if (*input != '\0') {
         strcpy(history[original_history_idx], input);
@@ -147,8 +150,7 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
       printf("\r\n\033[0J");
       tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);
       return;
-    case 8:   // backspace
-    case 127: // delete
+    } else if (key == 8 || key == 127) { // backspace and delete
       if (index > 0) {
         index -= 1;
         // move content of input to the left
@@ -157,15 +159,13 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
         input[end] = 0;
         printf("\033[D\033[s\033[0J%s\033[u", &input[index]);
       }
-      break;
-    default:
+    } else {
       // like deleting in reverse
       end += 1;
       memcpy((input + index + 1), (input + index), end - index);
       input[index] = key;
       printf("\033[s\033[0J%s\033[u\033[C", &input[index]);
       index += 1;
-      break;
     }
   }
   tcsetattr(STDIN_FILENO, TCSANOW, &buffered_mode);

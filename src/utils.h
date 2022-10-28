@@ -2,7 +2,7 @@
 #define MAX_PATH 128
 #define MAX_PROMPT 256
 #define MAX_ARGS 16
-#define MAX_CMD 32
+#define MAX_CMD 128
 #define MAX_HISTORY 32
 #define MAX_ALIASES 32
 #define MAX_COMPS 32
