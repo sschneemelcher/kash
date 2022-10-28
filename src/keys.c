@@ -1,6 +1,7 @@
 #include "utils.h"
 
 #include "keys.h"
+#include "prompt.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,21 +52,7 @@ int get_completion(char *word, char comp[MAX_CMD]) {
     }
 
     if (i > 1) {
-      printf("\n\033[s\r");
-      int r = 0;
-      while (i > 0) {
-        if (MOD(i, 20) == 0) {
-          printf("\033[u\033[%iA", r);
-          r += 1;
-          for (int i = 0; i < r; i++) {
-            printf("\n");
-          }
-          printf("\033[s\r");
-        }
-        printf("%s ", comps[i - 1]);
-        i -= 1;
-      }
-      printf("\033[u\033[%iA", r);
+      display_suggestions(comps, i, -1);
     } else if (i == 1) {
       strcpy(comp, (comps[0] + len - (subdirs_end - word)));
     }

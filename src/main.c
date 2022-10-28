@@ -61,7 +61,7 @@ int shell_loop(char **env, int sess, int input_fd, char *input_str) {
   char input[MAX_INPUT] = "";
   char prompt[MAX_PROMPT] = "";
 
-  int history_idx = 0;
+  int history_idx = 1;
 
   if (sess == INTERACTIVE) {
     char kashrc_path[MAX_PATH];
