@@ -16,23 +16,23 @@ int main(int argc, char **argv, char **envp) {
   signal(SIGINT, intHandler);
 
   int opt;
-  char inp[MAX_INPUT] = {0};
+  char input[MAX_INPUT] = {0};
   while ((opt = getopt(argc, argv, "c:")) != -1) {
     if (opt == 'c') {
-      memcpy(inp, optarg, MAX_INPUT);
-      inp[MAX_INPUT - 1] = 0;
-      execute_commands(inp, envp, NULL);
+      memcpy(input, optarg, MAX_INPUT);
+      input[MAX_INPUT - 1] = 0;
+      execute_commands(input, envp, NULL);
       return EXIT_SUCCESS;
     }
   }
 
   if (!isatty(STDIN_FILENO)) {
     // input is piped into kash
-    read(STDIN_FILENO, inp, MAX_INPUT);
-    execute_commands(inp, envp, NULL);
+    read(STDIN_FILENO, input, MAX_INPUT);
+    execute_commands(input, envp, NULL);
   } else if (optind >= argc) {
     // interactive session
-    shell_loop(envp, inp);
+    shell_loop(envp, input);
   } else {
     // start kash with files (e.g. `kash script.sh`)
     int i = optind;
@@ -41,11 +41,11 @@ int main(int argc, char **argv, char **envp) {
       if (fp == 0) {
         printf("-kash: unable to open file '%s': %s\n", argv[i],
                strerror(errno));
-        return 1;
+        return EXIT_FAILURE;
       } else {
-        read(fp, inp, MAX_INPUT);
+        read(fp, input, MAX_INPUT);
         close(fp);
-        execute_commands(inp, envp, NULL);
+        execute_commands(input, envp, NULL);
       }
       i += 1;
     }
@@ -95,6 +95,10 @@ int execute_commands(char input[MAX_INPUT], char **env,
   char *current;
   int end_flag = 0;
   int pipe_flag = 0;
+  int result = 0;
+
+  int pid = 0;
+  int prev_bg = 0;
   while (*input != 0) {
     current = input;
     struct command cmd;
@@ -116,13 +120,27 @@ int execute_commands(char input[MAX_INPUT], char **env,
     }
     *input = 0;
     parse_input(current, &cmd, aliases);
-    if (run(cmd, env, aliases, pipes)) {
-      graceful_exit(aliases, EXIT_SUCCESS);
+
+    // if (pid != 0 && !prev_bg) {
+    //   waitpid(pid, &result, 0);
+    // }
+
+    if (cmd.builtin == EXIT) {
+      exit(EXIT_SUCCESS);
     }
+
+    pid = fork();
+    if (pid == 0) {
+      // child process
+      run(cmd, env, aliases, pipes);
+      exit(EXIT_SUCCESS);
+    }
+    
+    prev_bg = cmd.bg;
 
     if (end_flag == 0) {
       input += 1;
     }
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
