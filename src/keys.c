@@ -53,6 +53,7 @@ int get_completion(char *word, char comp[MAX_CMD]) {
 
     if (i > 1) {
       display_suggestions(comps, i, -1);
+      return -1;
     } else if (i == 1) {
       strcpy(comp, (comps[0] + len - (subdirs_end - word)));
     }
@@ -61,7 +62,7 @@ int get_completion(char *word, char comp[MAX_CMD]) {
   return strlen(comp);
 }
 
-void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
+void handle_keys(char input[MAX_INPUT], char history[MAX_HISTORY][MAX_INPUT],
                  int history_idx) {
 
   // sets the terminal into raw mode and saves the settings of
@@ -118,7 +119,7 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
           last_word_start -= 1;
         }
         int len = 0;
-        if ((len = get_completion(last_word_start, comp))) {
+        if ((len = get_completion(last_word_start, comp)) > 0) {
           if ((len + end) < MAX_INPUT) {
             index = end + len;
           } else {
@@ -127,6 +128,8 @@ void handle_keys(char *input, char history[MAX_HISTORY][MAX_INPUT],
           memcpy((input + end), comp, index);
           end = index;
           printf("%.*s", index, comp);
+        } else if (len < 0) {
+          printf("%s", input);
         }
       }
     } else if (key == '\n' || key == 4) { // 4 is the EOT code

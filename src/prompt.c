@@ -6,22 +6,16 @@
 #include <string.h>
 #include <unistd.h>
 
-void display_suggestions(char list[MAX_COMPS][MAX_CMD], int no_elems,  int highlight_idx) {
-  printf("\n\033[s\r");
-  int r = 0;
+void display_suggestions(char list[MAX_COMPS][MAX_CMD], int no_elems,
+                         int highlight_idx) {
+  printf("\n\r");
   while (no_elems >= 0) {
-    if (MOD(no_elems, 20) == 0) {
-      printf("\033[u\033[%iA", r);
-      r += 1;
-      for (int i = 0; i < r; i++) {
-        printf("\n");
-      }
-      printf("\033[s\r");
-    }
     printf("%s ", *(list + no_elems));
     no_elems -= 1;
   }
-  printf("\033[u\033[%iA", r);
+  char prompt[MAX_PROMPT];
+  printf("\n\r");
+  print_prompt(prompt);
 }
 
 void print_prompt(char *prompt) {
