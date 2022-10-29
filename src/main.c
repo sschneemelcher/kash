@@ -18,20 +18,23 @@ int main(int argc, char **argv, char **envp) {
   int opt;
   char inp[MAX_INPUT] = {0};
   while ((opt = getopt(argc, argv, "c:")) != -1) {
-    switch (opt) {
-    case 'c':
+    if (opt == 'c') {
       memcpy(inp, optarg, MAX_INPUT);
       inp[MAX_INPUT - 1] = 0;
-      break;
+      execute_commands(inp, envp, NULL);
+      return EXIT_SUCCESS;
     }
   }
 
   if (!isatty(STDIN_FILENO)) {
+    // input is piped into kash
     read(STDIN_FILENO, inp, MAX_INPUT);
     execute_commands(inp, envp, NULL);
   } else if (optind >= argc) {
+    // interactive session
     shell_loop(envp, inp);
   } else {
+    // start kash with files (e.g. `kash script.sh`)
     int i = optind;
     while (i < argc) {
       int fp = open(argv[i], O_RDONLY);
@@ -40,13 +43,13 @@ int main(int argc, char **argv, char **envp) {
                strerror(errno));
         return 1;
       } else {
-        read(STDIN_FILENO, inp, MAX_INPUT);
+        read(fp, inp, MAX_INPUT);
         close(fp);
         execute_commands(inp, envp, NULL);
       }
       i += 1;
     }
-    return 0;
+    return EXIT_SUCCESS;
   }
 }
 
@@ -77,12 +80,13 @@ int shell_loop(char **env, char input[MAX_INPUT]) {
 
     memset(input, 0, MAX_INPUT);
   } while (1);
-  
+
   graceful_exit(aliases, EXIT_SUCCESS);
   return EXIT_FAILURE;
 }
 
-int execute_commands(char input[MAX_INPUT], char **env, char *aliases[MAX_ALIASES][2]) {
+int execute_commands(char input[MAX_INPUT], char **env,
+                     char *aliases[MAX_ALIASES][2]) {
 
   int pipes[8][2];
 
