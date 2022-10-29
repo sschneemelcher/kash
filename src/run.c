@@ -9,11 +9,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int run(struct command cmd, char **env, char *aliases[MAX_ALIASES][2], int sess,
-        int pipes[8][2]) {
+int run(struct command cmd, char **env,
+        char *aliases[MAX_ALIASES][2], int pipes[8][2]) {
   switch (cmd.builtin) {
   case NONE:
-    run_cmd(cmd, env, aliases, pipes);
+    run_cmd(cmd, env, pipes);
     break;
   case CD:
     run_cd(cmd);
@@ -24,7 +24,7 @@ int run(struct command cmd, char **env, char *aliases[MAX_ALIASES][2], int sess,
     echo(cmd);
     break;
   case ALIAS:
-    if (sess == INTERACTIVE) {
+    if (aliases) {
       run_alias(cmd, aliases);
     }
     break;
@@ -34,7 +34,7 @@ int run(struct command cmd, char **env, char *aliases[MAX_ALIASES][2], int sess,
   return 0;
 }
 
-void run_cmd(struct command cmd, char **env, char *aliases[MAX_ALIASES][2], int pipes[8][2]) {
+void run_cmd(struct command cmd, char **env, int pipes[8][2]) {
 
   if (cmd.pipe == 1) {
     pipe(pipes[0]);
@@ -48,7 +48,8 @@ void run_cmd(struct command cmd, char **env, char *aliases[MAX_ALIASES][2], int 
       close(pipes[0][1]);
     }
     int result = 0;
-    waitpid(pid, &result, 0);
+    if (!cmd.bg)
+      waitpid(pid, &result, 0);
     switch (result) {
     case 0:
       break;

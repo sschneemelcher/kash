@@ -14,25 +14,23 @@
 
 int main(int argc, char **argv, char **envp) {
   signal(SIGINT, intHandler);
-  
-  
+
   int opt;
   char inp[MAX_INPUT] = {0};
-  enum session_t tsession = INTERACTIVE;
   while ((opt = getopt(argc, argv, "c:")) != -1) {
     switch (opt) {
     case 'c':
       memcpy(inp, optarg, MAX_INPUT);
       inp[MAX_INPUT - 1] = 0;
-      tsession = NONINTERACTIVE;
       break;
     }
   }
 
   if (!isatty(STDIN_FILENO)) {
-    shell_loop(envp, NONINTERACTIVE, STDIN_FILENO, NULL);
+    read(STDIN_FILENO, inp, MAX_INPUT);
+    execute_commands(inp, envp, NULL);
   } else if (optind >= argc) {
-    shell_loop(envp, tsession, 0, inp);
+    shell_loop(envp, inp);
   } else {
     int i = optind;
     while (i < argc) {
@@ -42,8 +40,9 @@ int main(int argc, char **argv, char **envp) {
                strerror(errno));
         return 1;
       } else {
-        shell_loop(envp, NONINTERACTIVE, fp, NULL);
+        read(STDIN_FILENO, inp, MAX_INPUT);
         close(fp);
+        execute_commands(inp, envp, NULL);
       }
       i += 1;
     }
@@ -51,57 +50,41 @@ int main(int argc, char **argv, char **envp) {
   }
 }
 
-int shell_loop(char **env, int sess, int input_fd, char *input_str) {
+int shell_loop(char **env, char input[MAX_INPUT]) {
+
+  char prompt[MAX_PROMPT] = "";
   char *aliases[MAX_ALIASES][2] = {};
-  int pipes[8][2];
   char history[MAX_HISTORY][MAX_INPUT];
+
   for (int i = 0; i < MAX_HISTORY; i++) {
     history[i][0] = 0;
   }
-  char input[MAX_INPUT] = "";
-  char prompt[MAX_PROMPT] = "";
-
   int history_idx = 1;
-
-  if (sess == INTERACTIVE) {
-    char kashrc_path[MAX_PATH];
-    strcpy(kashrc_path, getenv("HOME"));
-    strcpy(kashrc_path + strlen(kashrc_path), "/.kashrc");
-    int fp = open(kashrc_path, O_RDONLY);
-    read(fp, input, MAX_INPUT);
-    execute_commands(input, env, aliases, sess, pipes);
-  }
+  char kashrc_path[MAX_PATH];
+  sprintf(kashrc_path, "%s%s", getenv("HOME"), "/.kashrc");
+  int fp = open(kashrc_path, O_RDONLY);
+  read(fp, input, MAX_INPUT);
+  execute_commands(input, env, aliases);
 
   do {
-    if (sess == INTERACTIVE) {
-      print_prompt(prompt);
-      handle_keys(input, history, history_idx);
-    } else {
-      if (input_str != 0) {
-        memcpy(input, input_str, MAX_INPUT);
-      } else {
-        read(input_fd, input, MAX_INPUT);
-      }
-      input[MAX_INPUT - 1] = 0;
-    }
+    print_prompt(prompt);
+    handle_keys(input, history, history_idx);
+    input[MAX_INPUT - 1] = 0;
 
-    if (!execute_commands(input, env, aliases, sess, pipes)) {
+    if (!execute_commands(input, env, aliases)) {
       history_idx = MOD((history_idx + 1), MAX_HISTORY);
     }
 
-  } while (sess == INTERACTIVE);
-
-  for (int i = 0; i < MAX_ALIASES; i++) {
-    if (*aliases[i]) {
-      free(aliases[i][0]);
-      free(aliases[i][1]);
-    }
-  }
-  return EXIT_SUCCESS;
+    memset(input, 0, MAX_INPUT);
+  } while (1);
+  
+  graceful_exit(aliases, EXIT_SUCCESS);
+  return EXIT_FAILURE;
 }
 
-int execute_commands(char *input, char **env, char *aliases[MAX_ALIASES][2],
-                     int sess, int pipes[8][2]) {
+int execute_commands(char input[MAX_INPUT], char **env, char *aliases[MAX_ALIASES][2]) {
+
+  int pipes[8][2];
 
   if (*input == 0)
     return 1;
@@ -129,7 +112,7 @@ int execute_commands(char *input, char **env, char *aliases[MAX_ALIASES][2],
     }
     *input = 0;
     parse_input(current, &cmd, aliases);
-    if (run(cmd, env, aliases, sess, pipes)) {
+    if (run(cmd, env, aliases, pipes)) {
       graceful_exit(aliases, EXIT_SUCCESS);
     }
 
@@ -137,6 +120,5 @@ int execute_commands(char *input, char **env, char *aliases[MAX_ALIASES][2],
       input += 1;
     }
   }
-  memset(input, 0, MAX_INPUT);
   return 0;
 }

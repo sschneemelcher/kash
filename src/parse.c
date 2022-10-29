@@ -61,7 +61,7 @@ void parse_input(char *input, struct command *cmd, char *aliases[MAX_ALIASES][2]
   int hash_value =
       MOD(hash(cmd->arg_ptrs[0], strlen(cmd->arg_ptrs[0])), MAX_ALIASES);
 
-  if (*aliases[hash_value] &&
+  if (aliases && *aliases[hash_value] &&
       strcmp(aliases[hash_value][0], cmd->arg_ptrs[0]) == 0) {
     cmd->arg_ptrs[0] = aliases[hash_value][1];
   }
