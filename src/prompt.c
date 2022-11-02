@@ -9,9 +9,8 @@
 void display_suggestions(char list[MAX_COMPS][MAX_CMD], int no_elems,
                          int highlight_idx) {
   printf("\n\r");
-  while (no_elems >= 0) {
-    printf("%s ", *(list + no_elems));
-    no_elems -= 1;
+  for (int i = 0; i < no_elems; i++) {
+    printf("%s ", list[i]);
   }
   char prompt[MAX_PROMPT];
   printf("\n\r");

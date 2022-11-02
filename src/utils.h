@@ -5,7 +5,7 @@
 #define MAX_CMD 128
 #define MAX_HISTORY 32
 #define MAX_ALIASES 32
-#define MAX_COMPS 32
+#define MAX_COMPS 64
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

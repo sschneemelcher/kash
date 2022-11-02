@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sys/errno.h>
 #include <unistd.h>
+#include <signal.h>
 
 int main(int argc, char **argv, char **envp) {
   signal(SIGINT, intHandler);

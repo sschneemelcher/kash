@@ -36,14 +36,15 @@ int get_completion(char *word, char comp[MAX_CMD]) {
     while (i < MAX_COMPS && ent) {
       if (memcmp(ent->d_name, subdirs_end, len - (subdirs_end - word)) == 0 ||
           *subdirs_end == 0 || *subdirs_end == ' ') {
-        if (ent->d_namlen > MAX_CMD - 1)
+        int d_namlen = strlen(ent->d_name);
+        if (d_namlen > MAX_CMD - 1)
           continue;
         strncpy(comps[i], ent->d_name, MAX_CMD);
         struct stat st;
         fstatat(dirfd(dir), ent->d_name, &st, 0);
         if (S_ISDIR(st.st_mode)) {
-          comps[i][ent->d_namlen] = '/';
-          comps[i][ent->d_namlen + 1] = 0;
+          comps[i][d_namlen] = '/';
+          comps[i][d_namlen + 1] = 0;
         }
 
         i += 1;
@@ -51,11 +52,31 @@ int get_completion(char *word, char comp[MAX_CMD]) {
       ent = readdir(dir);
     }
 
-    if (i > 1) {
+    char gr_common_sub[MAX_CMD] = {0};
+    int gcs_idx = 0;
+    while (1 && i > 1) {
+      // printf("%i: %c", gcs_idx, comps[0][gcs_idx]);
+      gr_common_sub[gcs_idx] = comps[0][gcs_idx + (len - (subdirs_end - word))];
+      for (int j = 1; j < i; j++) {
+        if (comps[j][gcs_idx + (len - (subdirs_end - word))] != gr_common_sub[gcs_idx]) {
+          gr_common_sub[gcs_idx] = 0;
+          break;
+        }
+      }
+      if (gr_common_sub[gcs_idx] == 0) {
+        break;
+      } else {
+        gcs_idx += 1;
+      }
+    }
+
+    if (i > 1 && gcs_idx == 0) {
       display_suggestions(comps, i, -1);
       return -1;
     } else if (i == 1) {
       strcpy(comp, (comps[0] + len - (subdirs_end - word)));
+    } else if (gcs_idx > 0) {
+      strcpy(comp, gr_common_sub);
     }
   }
 
