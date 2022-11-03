@@ -10,7 +10,7 @@ void display_suggestions(char list[MAX_COMPS][MAX_CMD], int no_elems,
                          int highlight_idx) {
   printf("\n\r");
   for (int i = 0; i < no_elems; i++) {
-    printf("%s ", list[i]);
+    printf("%s    ", list[i]);
   }
   char prompt[MAX_PROMPT];
   printf("\n\r");
@@ -19,24 +19,38 @@ void display_suggestions(char list[MAX_COMPS][MAX_CMD], int no_elems,
 
 void print_prompt(char *prompt) {
   /* TODO do something more interesting with the prompt */
-  getcwd(prompt, MAX_PATH);
-  char pprompt[MAX_PROMPT] = {0};
-  char *home = getenv("HOME");
 
-  if (home) {
-    int flag = 1;
-    int idx = 0;
-    while (*(home + idx) != 0) {
-      if (*(home + idx) != *(prompt + idx))
-        flag = 0;
-      idx += 1;
+  char *ps1 = getenv("PS1");
+  char pprompt[MAX_PROMPT] = {0};
+  int idx = 0;
+  while (ps1 && *(ps1) && *(ps1 + 1)) {
+    if (*(ps1) == '\\' && *(ps1 + 1) == 'W') {
+      ps1 += 1;
+      char cwd[MAX_PATH] = {0};
+      getcwd(cwd, MAX_PATH);
+      char *home = getenv("HOME");
+      if (home) {
+        int flag = 1;
+        int home_idx = 0;
+        while (*(home + home_idx) != 0) {
+          if (*(home + home_idx) != *(cwd + home_idx))
+            flag = 0;
+          home_idx += 1;
+        }
+        if (flag) {
+          pprompt[idx] = '~';
+        }
+        strcpy(pprompt + idx + flag, cwd + (flag * home_idx));
+        idx = strlen(pprompt) - 1;
+      }
+    } else {
+      pprompt[idx] = *(ps1);
     }
-    if (flag) {
-      pprompt[0] = '~';
-    }
-    strcpy(pprompt + flag, prompt + (flag * idx));
+    ps1 += 1;
+    idx += 1;
   }
-  // sprintf(prompt, "%s $ ", prompt);
-  // printf("%s", prompt);
-  printf("%s $ ", pprompt);
+  pprompt[idx] = *ps1;
+  pprompt[idx + 1] = 0;
+
+  printf("%s", pprompt);
 }
