@@ -6,12 +6,12 @@
 #include "prompt.h"
 #include "run.h"
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/errno.h>
 #include <unistd.h>
-#include <signal.h>
 
 int main(int argc, char **argv, char **envp) {
   signal(SIGINT, intHandler);
@@ -60,15 +60,29 @@ int shell_loop(char **env, char input[MAX_INPUT]) {
   char *aliases[MAX_ALIASES][2] = {};
   char history[MAX_HISTORY][MAX_INPUT];
 
-  for (int i = 0; i < MAX_HISTORY; i++) {
-    history[i][0] = 0;
-  }
-  int history_idx = 1;
+  int history_idx = -1;
   char kashrc_path[MAX_PATH];
   sprintf(kashrc_path, "%s%s", getenv("HOME"), "/.kashrc");
   int fp = open(kashrc_path, O_RDONLY);
   read(fp, input, MAX_INPUT);
   execute_commands(input, env, aliases);
+  memset(input, 0, MAX_INPUT);
+  char history_path[MAX_PATH];
+  sprintf(history_path, "%s%s", getenv("HOME"), "/.kash_history");
+  int history_fp = open(history_path, O_RDWR | O_APPEND | O_CREAT, 0644);
+  int end = read(history_fp, input, MAX_INPUT);
+
+  for (int i = MAX_HISTORY - 1; i > 0 && end > 0; i--) {
+    while (input[end - 1] != '\n' && end > 0) {
+      end -= 1;
+    }
+    puts(input + end);
+    strncpy(history[i], (input + end), MAX_INPUT);
+    if (end > 0) {
+      end -= 1;
+      input[end] = 0;
+    }
+  }
 
   do {
     print_prompt(prompt);
@@ -77,6 +91,8 @@ int shell_loop(char **env, char input[MAX_INPUT]) {
 
     if (!execute_commands(input, env, aliases)) {
       history_idx = MOD((history_idx + 1), MAX_HISTORY);
+      write(history_fp, "\n", 1);
+      write(history_fp, input, strnlen(input, MAX_INPUT));
     }
 
     memset(input, 0, MAX_INPUT);
