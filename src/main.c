@@ -76,7 +76,7 @@ int shell_loop(char **env, char input[MAX_INPUT]) {
     while (input[end - 1] != '\n' && end > 0) {
       end -= 1;
     }
-    puts(input + end);
+    // puts(input + end);
     strncpy(history[i], (input + end), MAX_INPUT);
     if (end > 0) {
       end -= 1;
