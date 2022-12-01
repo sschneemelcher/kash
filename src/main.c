@@ -55,7 +55,6 @@ int main(int argc, char **argv, char **envp) {
 }
 
 int shell_loop(char **env, char input[MAX_INPUT]) {
-
   char prompt[MAX_PROMPT] = "";
   char *aliases[MAX_ALIASES][2] = {};
   char history[MAX_HISTORY][MAX_INPUT];
@@ -72,11 +71,12 @@ int shell_loop(char **env, char input[MAX_INPUT]) {
   int history_fp = open(history_path, O_RDWR | O_APPEND | O_CREAT, 0644);
   int end = read(history_fp, input, MAX_INPUT);
 
+  // copy the contents of the history file in the history array
   for (int i = MAX_HISTORY - 1; i > 0 && end > 0; i--) {
     while (input[end - 1] != '\n' && end > 0) {
       end -= 1;
     }
-    // puts(input + end);
+
     strncpy(history[i], (input + end), MAX_INPUT);
     if (end > 0) {
       end -= 1;
@@ -84,17 +84,22 @@ int shell_loop(char **env, char input[MAX_INPUT]) {
     }
   }
 
+  // main interactive loop
   do {
     print_prompt(prompt);
     handle_keys(input, history, history_idx);
     input[MAX_INPUT - 1] = 0;
 
-    if (!execute_commands(input, env, aliases)) {
-      history_idx = MOD((history_idx + 1), MAX_HISTORY);
-      write(history_fp, "\n", 1);
-      write(history_fp, input, strnlen(input, MAX_INPUT));
-    }
+    execute_commands(input, env, aliases);
 
+    // advance the position in history and write the input
+    // in the history file
+    history_idx = MOD((history_idx + 1), MAX_HISTORY);
+    write(history_fp, "\n", 1);
+    write(history_fp, input, strnlen(input, MAX_INPUT));
+
+    // overwrite the input to avoid accidentally reading
+    // artefacts of it in the next iteration
     memset(input, 0, MAX_INPUT);
   } while (1);
 
@@ -119,6 +124,9 @@ int execute_commands(char input[MAX_INPUT], char **env,
       input += 1;
     }
 
+    // TODO right now kash is hardcoded to only allow
+    // pipes of length 1, this needs to implemented
+    // to allow pipes of length `MAX_PIPE`
     if (pipe_flag) {
       cmd.pipe = 2;
       pipe_flag = 0;

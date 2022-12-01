@@ -26,7 +26,7 @@ how long this will take ;)
 
 next TODOs:
 
-+ piping and output redirection
++ longer piping and output redirection
 + conditional chaining
 + export builtin
 + improve history
